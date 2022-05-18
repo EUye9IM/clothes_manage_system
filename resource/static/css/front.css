@@ -1,0 +1,12 @@
+html{
+	background-image: linear-gradient(to bottom right,#ffdfdf, #dfdfff);
+	height: 100%;
+}
+.main {
+	max-width: 720px;
+	margin: 0 auto;
+}
+
+h1 {
+	font-size: 4em;
+}
