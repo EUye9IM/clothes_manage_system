@@ -38,10 +38,3 @@ func routeFront(e *gin.Engine) {
 		c.HTML(http.StatusOK, "test/test.tmpl", nil)
 	})
 }
-
-func routeApi(e *gin.Engine) {
-	route_group := e.Group("/api")
-	route_group.GET("/ping", func(c *gin.Context) {
-		c.String(http.StatusOK, "pong")
-	})
-}

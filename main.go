@@ -6,6 +6,6 @@ import (
 )
 
 func main() {
-	fmt.Println("http://localhost:80/api/ping")
+	fmt.Println("http://localhost:80/backend")
 	app.Run()
 }

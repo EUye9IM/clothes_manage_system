@@ -3,6 +3,7 @@ package dbconn
 import (
 	"database/sql"
 	"fmt"
+
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -33,6 +34,9 @@ func Close() {
 	db = nil
 }
 
+/**
+ * 返回 登录成功，id，grant
+ */
 func Login(uname string, upasswd string) (bool, int, int) {
 	var err error
 	var uid, ugrant int

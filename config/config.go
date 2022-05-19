@@ -10,6 +10,9 @@ const (
 	db_password = "root"
 	log_path    = "manage_system.log"
 	app_port    = 80
+
+	SESSION_SEC  = "session-sec"
+	SESSION_NAME = "ID"
 )
 
 var (

@@ -8,10 +8,12 @@ import (
 	"manage_system/dbconn"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/sessions"
 )
 
 var (
 	engin *gin.Engine
+	store = sessions.NewCookieStore([]byte(config.SESSION_SEC))
 )
 
 func Run() {
