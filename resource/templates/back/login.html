@@ -16,14 +16,14 @@
 		position: fixed; top: 0; bottom: 0; left: 0; right: 0; margin: auto; padding: 20px;border-radius: 10px;
 		background-color: #ffffff6f; ">
 		<h1>登录</h1>
-		<form action="/backend/login" method="POST" class="layui-form" style="margin: 7px;">
+		<form class="layui-form" style="margin: 7px;">
 			<label class="layui-form-label">用户名</label>
 			<div class="layui-input-block">
-				<input type="text" name="username" placeholder="" class="layui-input" style="margin: 7px;">
+				<input type="text" name="username"  lay-verify="required" class="layui-input" style="margin: 7px;" >
 			</div>
 			<label class="layui-form-label">密码</label>
 			<div class="layui-input-block">
-				<input type="password" name="password" placeholder="" class="layui-input" style="margin: 7px;">
+				<input type="password" name="password"  lay-verify="required"  class="layui-input" style="margin: 7px;">
 			</div>
 			<button class="layui-btn  layui-btn-fluid" lay-submit lay-filter="*" style="margin: 7px;">
 				登录
