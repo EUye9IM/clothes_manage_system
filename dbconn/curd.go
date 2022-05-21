@@ -14,7 +14,7 @@ const (
 	GRANT_ITEM_ADD
 	GRANT_ITEM_EDIT
 
-	GRANT_SUPER = (1 << iota) - 1
+	// GRANT_SUPER = (1 << iota) - 1
 )
 
 type ItemInfomation struct {

@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"log"
 	"manage_system/config"
 	"manage_system/dbconn"
@@ -60,8 +61,8 @@ func routeApi(e *gin.Engine) {
 	/*
 		login
 		post
-		username
-		password
+			username
+			password
 	*/
 	route_group.POST("/login/", func(c *gin.Context) {
 		session, err := store.Get(c.Request, config.SESSION_NAME)
@@ -137,6 +138,7 @@ func routeApi(e *gin.Engine) {
 			})
 			return
 		}
+		log.Println("user id:" + strconv.Itoa(uinfo.ID) + " change own password")
 		session.Values["user"] = nil
 		session.Save(c.Request, c.Writer)
 		c.JSON(http.StatusOK, gin.H{
@@ -155,7 +157,7 @@ func routeApi(e *gin.Engine) {
 
 	*/
 	route_group.GET("/select_user/", func(c *gin.Context) {
-		ok, uinfo, _ := checkgrant(c, dbconn.GRANT_USER)
+		ok, _, _ := checkgrant(c, dbconn.GRANT_USER)
 		if !ok {
 			return
 		}
@@ -175,7 +177,6 @@ func routeApi(e *gin.Engine) {
 				"data":  []gin.H{},
 			})
 		}
-		log.Println("user id:" + strconv.Itoa(uinfo.ID) + "select_user")
 		data := []gin.H{}
 		for _, i := range tb.Content {
 			if len(i) < 3 {
@@ -199,6 +200,87 @@ func routeApi(e *gin.Engine) {
 			"msg":   "成功。",
 			"count": len(data),
 			"data":  data,
+		})
+	})
+	/*
+		adduser
+		post
+			name
+			password
+			grant-user
+			grant-product-add
+			grant-product-edit
+			grant-item-read
+			grant-item-add
+			grant-item-edit
+		ret
+			res
+			msg
+	*/
+	route_group.POST("/add_user/", func(c *gin.Context) {
+		ok, uinfo, _ := checkgrant(c, dbconn.GRANT_USER)
+		if !ok {
+			return
+		}
+		var err error
+		name := c.PostForm("name")
+		password := c.PostForm("password")
+
+		g_u := c.PostForm("grant-user")
+		g_pa := c.PostForm("grant-product-add")
+		g_pe := c.PostForm("grant-product-edit")
+		g_ir := c.PostForm("grant-item-read")
+		g_ia := c.PostForm("grant-item-add")
+		g_ie := c.PostForm("grant-item-edit")
+
+		fmt.Println(g_u,
+			g_pa,
+			g_pe,
+			g_ir,
+			g_ia,
+			g_ie)
+
+		grant, err := strconv.Atoi(c.PostForm("grant"))
+		if name == "" {
+			c.JSON(http.StatusOK, gin.H{
+				"res": false,
+				"msg": "用户名不能为空",
+			})
+			return
+		}
+		if password == "" {
+			c.JSON(http.StatusOK, gin.H{
+				"res": false,
+				"msg": "密码不能为空",
+			})
+			return
+		}
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"res": false,
+				"msg": "权限标志不合法",
+			})
+			return
+		}
+		ret, err := dbconn.AddUser(name, password, grant)
+		if err != nil || ret != 1 {
+			if err != nil {
+				c.JSON(http.StatusOK, gin.H{
+					"res": false,
+					"msg": "错误。请联系管理。【" + srcLoc() + "】" + err.Error(),
+				})
+			} else {
+				c.JSON(http.StatusOK, gin.H{
+					"res": false,
+					"msg": "错误。请联系管理。【" + srcLoc() + "】",
+				})
+			}
+			return
+		}
+		log.Println("user id:" + strconv.Itoa(uinfo.ID) + " add_user " + name)
+		c.JSON(http.StatusOK, gin.H{
+			"res": true,
+			"msg": "添加成功",
 		})
 	})
 }

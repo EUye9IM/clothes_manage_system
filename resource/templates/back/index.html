@@ -58,10 +58,10 @@
 							<form class="layui-form" action="">
 								<label class="layui-form-label">检索用户</label>
 								<div class="layui-input-inline">
-									<input type="text" id="user-name-search" class="layui-input" placeholder="输入用户名" >
+									<input type="text" id="user-name-search" class="layui-input" placeholder="输入用户名">
 								</div>
 							</form>
-							<table id="tb-user" lay-filter="user"></table>
+							<table id="tb-user" lay-filter="tb-user"></table>
 						</div>
 					</fieldset>
 				</div>
@@ -137,6 +137,38 @@
 	<script src="/static/js/common.js"></script>
 	<script src="/static/js/back_index.js"></script>
 
+	<!-- 一些html组件 -->
+	<!-- 用户管理 -->
+	<script type="text/html" id="user-toolbar">
+		<a class="layui-btn layui-btn-sm" lay-event="add">添加用户</a>
+	</script>
+	<script type="text/html" id="user-tool">
+		<button class="layui-btn layui-btn-xs" lay-event="edit">编辑</button>
+		<button class="layui-btn layui-btn-xs" lay-event="delete">删除</button>
+	</script>
+	<div id="user-layer-add" style="display: none;">
+		<form class="layui-form" style="margin:20px;">
+			<label class="layui-form-label">用户名</label>
+			<div class="layui-input-inline">
+				<input type="text" id="user-layer-username" class="layui-input">
+			</div>
+			<br>
+			<label class="layui-form-label">初始密码</label>
+			<div class="layui-input-inline">
+				<input type="password" id="user-layer-password" class="layui-input">
+			</div>
+			<br>
+			<label class="layui-form-label">权限</label>
+			<div class="layui-input-inline">
+				<input type="checkbox" id="user-layer-grant-user" title="用户编辑"><br>
+				<input type="checkbox" id="user-layer-grant-product-add" title="添加品类"><br>
+				<input type="checkbox" id="user-layer-grant-product-edit" title="编辑品类"><br>
+				<input type="checkbox" id="user-layer-grant-item-read" title="读取商品"><br>
+				<input type="checkbox" id="user-layer-grant-item-add" title="添加商品"><br>
+				<input type="checkbox" id="user-layer-grant-item-edit" title="编辑商品"><br>
+			</div>
+		</form>
+	</div>
 </body>
 
 
