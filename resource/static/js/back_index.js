@@ -53,9 +53,26 @@ layui.use(['element', 'form', 'layer', 'table'], function () {
 		height: 'full-300',
 		url: '/api/select_user',
 		cols: [[
-			{ field: 'id', title: 'ID', width: '20%', sort: true },
-			{ field: 'name', title: '用户名', width: '20%' },
-			{ field: 'grant', title: '权限', width: '40%' },
+			{ field: 'id', title: 'ID', width: '10%', sort: true },
+			{ field: 'name', title: '用户名', width: '10%' },
+			{
+				field: 'grant', title: '权限', width: '60%', templet: function (d) {
+					s = '';
+					if (d.grant & GRANT_USER)
+						s += '用户编辑 ';
+					if (d.grant & GRANT_PRODUCT_ADD)
+						s += '添加品类 ';
+					if (d.grant & GRANT_PRODUCT_EDIT)
+						s += '编辑品类 ';
+					if (d.grant & GRANT_ITEM_READ)
+						s += '读取商品 ';
+					if (d.grant & GRANT_ITEM_ADD)
+						s += '添加商品 ';
+					if (d.grant & GRANT_ITEM_EDIT)
+						s += '编辑商品 ';
+					return s;
+				}
+			},
 			{ field: 'edit', width: '15%', toolbar: '#user-tool' },
 		]],
 		toolbar: '#user-toolbar',
@@ -84,21 +101,21 @@ layui.use(['element', 'form', 'layer', 'table'], function () {
 					scrollbar: false,
 					yes: function (index, layero) {
 						var grant = 0;
-						if ($("#user-layer-grant-user").prop("checked"))
+						if ($("#user-layer-add-grant-user").prop("checked"))
 							grant += GRANT_USER;
-						if ($("#user-layer-grant-product-add").prop("checked")) {
+						if ($("#user-layer-add-grant-product-add").prop("checked")) {
 							grant += GRANT_PRODUCT_ADD;
 						}
-						if ($("#user-layer-grant-product-edit").prop("checked")) {
+						if ($("#user-layer-add-grant-product-edit").prop("checked")) {
 							grant += GRANT_PRODUCT_EDIT;
 						}
-						if ($("#user-layer-grant-item-read").prop("checked")) {
+						if ($("#user-layer-add-grant-item-read").prop("checked")) {
 							grant += GRANT_ITEM_READ;
 						}
-						if ($("#user-layer-grant-item-add").prop("checked")) {
+						if ($("#user-layer-add-grant-item-add").prop("checked")) {
 							grant += GRANT_ITEM_ADD;
 						}
-						if ($("#user-layer-grant-item-edit").prop("checked")) {
+						if ($("#user-layer-add-grant-item-edit").prop("checked")) {
 							grant += GRANT_ITEM_EDIT;
 						}
 						var upload_data = {
@@ -149,6 +166,7 @@ layui.use(['element', 'form', 'layer', 'table'], function () {
 	});
 
 });
+
 function showContent(select) {
 	$(".body-content").addClass("layui-hide");
 	if (select != "")

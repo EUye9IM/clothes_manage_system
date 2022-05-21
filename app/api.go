@@ -267,7 +267,7 @@ func routeApi(e *gin.Engine) {
 			if err != nil {
 				c.JSON(http.StatusOK, gin.H{
 					"res": false,
-					"msg": "错误。请联系管理。【" + srcLoc() + "】" + err.Error(),
+					"msg": "错误。用户已存在。",
 				})
 			} else {
 				c.JSON(http.StatusOK, gin.H{
