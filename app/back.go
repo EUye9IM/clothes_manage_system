@@ -61,7 +61,6 @@ func routeBack(e *gin.Engine) {
 		}
 		session.Options.MaxAge = -1
 		session.Save(c.Request, c.Writer)
-
 		c.Redirect(http.StatusFound, "/backend/")
 	})
 }

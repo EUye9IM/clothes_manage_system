@@ -1,13 +1,55 @@
 package app
 
 import (
+	"log"
 	"manage_system/config"
 	"manage_system/dbconn"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/sessions"
 )
+
+func checkgrant(c *gin.Context, grant int) (ok bool, uinfo UserInfo, session *sessions.Session) {
+	ok = false
+	session, err := store.Get(c.Request, config.SESSION_NAME)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":  -1,
+			"msg":   "错误。请联系管理。【" + srcLoc() + "】",
+			"count": 0,
+			"data":  []gin.H{},
+		})
+		return
+	}
+	if session.Values["user"] == nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":  -1,
+			"msg":   "您未登录，请刷新界面。",
+			"count": 0,
+			"data":  []gin.H{},
+		})
+		return
+	}
+	uinfo = session.Values["user"].(UserInfo)
+	if grant < 0 {
+		ok = true
+		return
+	}
+	if uinfo.Grant&grant == 0 {
+		log.Println("user id:" + strconv.Itoa(uinfo.ID) + " have no grant " + strconv.Itoa(grant))
+		c.JSON(http.StatusOK, gin.H{
+			"code":  -1,
+			"msg":   "您无权限，系统将记录您的行为。",
+			"count": 0,
+			"data":  []gin.H{},
+		})
+		return
+	}
+	ok = true
+	return
+}
 
 func routeApi(e *gin.Engine) {
 	route_group := e.Group("/api")
@@ -60,30 +102,19 @@ func routeApi(e *gin.Engine) {
 	/*
 		change password
 		post
-		old-password
-		new-password
+			old-password
+			new-password
 	*/
 	route_group.POST("/changepw/", func(c *gin.Context) {
-		session, err := store.Get(c.Request, config.SESSION_NAME)
-		if err != nil {
-			c.JSON(http.StatusOK, gin.H{
-				"res": false,
-				"msg": "错误。请联系管理。【" + srcLoc() + "】",
-			})
+		ok, uinfo, session := checkgrant(c, -1)
+		if !ok {
 			return
 		}
 
-		if session.Values["user"] == nil {
-			c.JSON(http.StatusOK, gin.H{
-				"res": false,
-				"msg": "您未登录，请刷新界面。",
-			})
-			return
-		}
 		oldpw := c.PostForm("old-password")
 		newpw := c.PostForm("new-password")
 
-		ok, _, _ := dbconn.Login(session.Values["user"].(UserInfo).Name, oldpw)
+		ok, _, _ = dbconn.Login(uinfo.Name, oldpw)
 		if !ok {
 			c.JSON(http.StatusOK, gin.H{
 				"res": false,
@@ -91,8 +122,7 @@ func routeApi(e *gin.Engine) {
 			})
 			return
 		}
-
-		ret, err := dbconn.SetUserPassword(strconv.Itoa(session.Values["user"].(UserInfo).ID), newpw)
+		ret, err := dbconn.SetUserPassword(strconv.Itoa(uinfo.ID), newpw)
 		if ret != 1 {
 			c.JSON(http.StatusOK, gin.H{
 				"res": false,
@@ -113,6 +143,62 @@ func routeApi(e *gin.Engine) {
 			"res": true,
 			"msg": "修改成功。请重新登录。",
 		})
-		return
+	})
+	/*
+		select user
+		GET
+		RET JSON
+			code int 0 true -1 false
+			msg string
+			count int
+			data list-json id,name,grant
+
+	*/
+	route_group.GET("/select_user/", func(c *gin.Context) {
+		ok, uinfo, _ := checkgrant(c, dbconn.GRANT_USER)
+		if !ok {
+			return
+		}
+		var tb dbconn.Table
+		var err error
+		search_name := c.Query("search_name")
+		if search_name == "" {
+			tb, err = dbconn.Select("user", nil, nil, []string{"u_id", "u_name", "u_grant"})
+		} else {
+			tb, err = dbconn.Select("user", []string{"u_name LIKE"}, []string{search_name}, []string{"u_id", "u_name", "u_grant"})
+		}
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"code":  -1,
+				"msg":   "错误。请联系管理。【" + srcLoc() + "】" + err.Error(),
+				"count": 0,
+				"data":  []gin.H{},
+			})
+		}
+		log.Println("user id:" + strconv.Itoa(uinfo.ID) + "select_user")
+		data := []gin.H{}
+		for _, i := range tb.Content {
+			if len(i) < 3 {
+				if err != nil {
+					c.JSON(http.StatusOK, gin.H{
+						"code":  -1,
+						"msg":   "错误。请联系管理。【" + srcLoc() + "】",
+						"count": 0,
+						"data":  []gin.H{},
+					})
+				}
+			}
+			data = append(data, gin.H{
+				"id":    i[0],
+				"name":  i[1],
+				"grant": i[2],
+			})
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"code":  0,
+			"msg":   "成功。",
+			"count": len(data),
+			"data":  data,
+		})
 	})
 }

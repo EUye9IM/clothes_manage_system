@@ -35,8 +35,8 @@
 				<ul class="layui-nav layui-nav-tree" lay-filter="test">
 					<li class="layui-nav-item layui-this"><a href="javascript:showContent('#cover')">首页</a></li>
 					<li class="layui-nav-item"><a href="javascript:showContent('#user')">用户管理</a></li>
+					<li class="layui-nav-item"><a href="javascript:showContent('#product')">品类管理</a></li>
 					<li class="layui-nav-item"><a href="javascript:showContent('#item')">商品管理</a></li>
-					<li class="layui-nav-item"><a href="javascript:;">批次管理</a></li>
 				</ul>
 			</div>
 		</div>
@@ -44,119 +44,98 @@
 		<div class="layui-body">
 			<!-- 内容主体区域 -->
 			<div style="padding: 15px;">
-				<!-- 账号管理 -->
-				<div id="account" class="body-content layui-hide">
-					<h1>账号设置</h1>
-					<div class="layui-tab">
-						<ul class="layui-tab-title layui-this">
-							<li>更改密码</li>
-						</ul>
-						<div class="layui-tab-content">
-							<div class="layui-tab-item layui-show">
-								<form class="layui-form">
-									<div class="layui-form-item">
-										<label class="layui-form-label">原密码</label>
-										<div class="layui-input-inline">
-											<input type="password" name="old-passwd" class="layui-input"
-												lay-verify="required">
-										</div>
-									</div>
-									<div class="layui-form-item">
-										<label class="layui-form-label">新密码</label>
-										<div class="layui-input-inline">
-											<input type="password" name="new-passwd" class="layui-input"
-												lay-verify="required">
-										</div>
-									</div>
-									<div class="layui-form-item">
-										<label class="layui-form-label">二次确认</label>
-										<div class="layui-input-inline">
-											<input type="password" name="new-passwd2" class="layui-input"
-												lay-verify="required">
-										</div>
-									</div>
-									<div class="layui-form-item">
-										<button class="layui-btn" lay-submit lay-filter="change-password">更改密码</button>
-									</div>
-								</form>
-							</div>
-						</div>
-					</div>
-				</div>
 				<!-- 首页 -->
 				<div id="cover" class="body-content">
 					<h1>欢迎使用纺织品全周期可追溯管理系统！</h1>
-					这里可以放点 banner 或者啥统计图。<br>
+					这里可以放点统计图公告啥的。<br>
 					但现在还没有。
 				</div>
 				<!-- 用户管理 -->
 				<div id="user" class="body-content layui-hide">
-					用户
+					<fieldset class="layui-elem-field">
+						<legend>用户管理</legend>
+						<div class="layui-field-box">
+							<form class="layui-form" action="">
+								<label class="layui-form-label">检索用户</label>
+								<div class="layui-input-inline">
+									<input type="text" id="user-name-search" class="layui-input" placeholder="输入用户名" >
+								</div>
+							</form>
+							<table id="tb-user" lay-filter="user"></table>
+						</div>
+					</fieldset>
+				</div>
+				<!-- 品类管理 -->
+				<div id="product" class="body-content layui-hide">
+					<fieldset class="layui-elem-field">
+						<legend>品类管理</legend>
+						<div class="layui-field-box">
+						</div>
+					</fieldset>
 				</div>
 				<!-- 商品管理 -->
 				<div id="item" class="body-content layui-hide">
-					商品
+					<fieldset class="layui-elem-field">
+						<legend>商品管理</legend>
+						<div class="layui-field-box">
+						</div>
+					</fieldset>
 				</div>
-
-
+				<!-- 账号管理 -->
+				<div id="account" class="body-content layui-hide">
+					<fieldset class="layui-elem-field">
+						<legend>账号设置</legend>
+						<div class="layui-field-box">
+							<div class="layui-tab">
+								<ul class="layui-tab-title layui-this">
+									<li>更改密码</li>
+								</ul>
+								<div class="layui-tab-content">
+									<div class="layui-tab-item layui-show">
+										<form class="layui-form">
+											<div class="layui-form-item">
+												<label class="layui-form-label">原密码</label>
+												<div class="layui-input-inline">
+													<input type="password" name="old-passwd" class="layui-input"
+														lay-verify="required">
+												</div>
+											</div>
+											<div class="layui-form-item">
+												<label class="layui-form-label">新密码</label>
+												<div class="layui-input-inline">
+													<input type="password" name="new-passwd" class="layui-input"
+														lay-verify="required">
+												</div>
+											</div>
+											<div class="layui-form-item">
+												<label class="layui-form-label">二次确认</label>
+												<div class="layui-input-inline">
+													<input type="password" name="new-passwd2" class="layui-input"
+														lay-verify="required">
+												</div>
+											</div>
+											<div class="layui-form-item">
+												<button class="layui-btn" lay-submit
+													lay-filter="change-password">更改密码</button>
+											</div>
+										</form>
+									</div>
+								</div>
+							</div>
+						</div>
+					</fieldset>
+				</div>
+				<!-- other -->
 			</div>
 		</div>
-
 		<div class="layui-footer">
 			<!-- 底部固定区域 -->
-			假装有备案号
+			<a href="https://beian.miit.gov.cn/" target="_blank">某ICP证xxxxxx号</a> 假装有备案号
 		</div>
 	</div>
 	<script src="/static/layui/layui.js"></script>
 	<script src="/static/js/common.js"></script>
-	<script>
-		var $ = layui.$;
-		layui.use(['element', 'form', 'layer'], function () {
-			var element = layui.element,
-				form = layui.form,
-				layer = layui.layer;
-			// 更改密码
-			form.on('submit(change-password)', function (data) {
-				if (data.field["new-passwd"] != data.field["new-passwd2"]) {
-					layer.msg("新密码不一致")
-					return false
-				}
-
-				var upload_data = {
-					"old-password": data.field["old-passwd"],
-					"new-password": data.field["new-passwd"]
-				};
-				xmlhttp.onreadystatechange = function () {
-					if (xmlhttp.readyState == 4) {
-						if (xmlhttp.status == 200) {
-							var res = JSON.parse(xmlhttp.response)
-							if (res.res) {
-								layer.msg(res.msg + "1 秒后跳转", {
-									time: 1000 //1秒关闭（如果不配置，默认是3秒）
-								}, function () {
-									location.href = "/backend/";
-								})
-							} else {
-								layer.msg(res.msg);
-							}
-						} else {
-							layer.msg("服务器连接失败：" + xmlhttp.status)
-						}
-					}
-				}
-				xmlhttp.open("POST", "/api/changepw/", true);
-				xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-				xmlhttp.send(toURL(upload_data))
-				return false
-			})
-		});
-		function showContent(select) {
-			$(".body-content").addClass("layui-hide");
-			if (select != "")
-				$(select).removeClass("layui-hide");
-		}
-
-	</script>
+	<script src="/static/js/back_index.js"></script>
 
 </body>
 

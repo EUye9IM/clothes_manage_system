@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	engin *gin.Engine
-	store = sessions.NewCookieStore([]byte(config.SESSION_SEC))
+	engine *gin.Engine
+	store  = sessions.NewCookieStore([]byte(config.SESSION_SEC))
 )
 
 func Run() {
@@ -22,18 +22,19 @@ func Run() {
 	}
 	defer dbconn.Close()
 
-	gin.SetMode(gin.ReleaseMode)
-	engin = gin.Default()
+	// gin.SetMode(gin.ReleaseMode)
+	engine = gin.Default()
+	engine.SetTrustedProxies(nil)
 
-	engin.Static("/static", "./resource/static")
-	engin.StaticFile("/favicon.ico", "./resource/favicon.ico")
+	engine.Static("/static", "./resource/static")
+	engine.StaticFile("/favicon.ico", "./resource/favicon.ico")
 
-	engin.Delims("[[[", "]]]")
-	engin.LoadHTMLGlob("./resource/templates/**/*")
+	engine.Delims("[[[", "]]]")
+	engine.LoadHTMLGlob("./resource/templates/**/*")
 
-	routeFront(engin)
-	routeBack(engin)
-	routeApi(engin)
+	routeFront(engine)
+	routeBack(engine)
+	routeApi(engine)
 	log.Println("Load success.")
-	engin.Run(fmt.Sprintf(":%v", config.APP_PORT))
+	engine.Run(fmt.Sprintf(":%v", config.APP_PORT))
 }

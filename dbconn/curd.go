@@ -1,25 +1,21 @@
 package dbconn
 
-import "errors"
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 // grant flag
-const GRANT_SUPER = 0077777
-const GRANT_BATCH_RD = 0000001
-const GRANT_BATCH_WR = 0000002
-const GRANT_BATCH_RM = 0000004
-const GRANT_ITEM_RD = 0000010
-const GRANT_ITEM_WR = 0000020
-const GRANT_ITEM_RM = 0000040
-const GRANT_PATTERN_RD = 0000100
-const GRANT_PATTERN_WR = 0000200
-const GRANT_PATTERN_RM = 0000400
-const GRANT_PRODUCT_RD = 0001000
-const GRANT_PRODUCT_WR = 0002000
-const GRANT_PRODUCT_RM = 0004000
-const GRANT_USER_RD = 0010000
-const GRANT_USER_WR = 0020000
-const GRANT_USER_RM = 0040000
+const (
+	GRANT_USER = 1 << iota
+	GRANT_PRODUCT_ADD
+	GRANT_PRODUCT_EDIT
+	GRANT_ITEM_READ
+	GRANT_ITEM_ADD
+	GRANT_ITEM_EDIT
+
+	GRANT_SUPER = (1 << iota) - 1
+)
 
 type ItemInfomation struct {
 	Id     string
@@ -49,7 +45,7 @@ func init() {
 
 func GetItemInfomation(id string) (info ItemInfomation, err error) {
 	tb_name := "item INNER JOIN product ON it_pd_id = pd_id INNER JOIN pattern ON pd_pt_id = pt_id"
-	tb, err := dbSelect(tb_name, []string{"it_id ="}, []string{id}, []string{"it_id", "pt_name", "pt_brand", "pd_color", "pd_size", "pt_price", "it_status"})
+	tb, err := Select(tb_name, []string{"it_id ="}, []string{id}, []string{"it_id", "pt_name", "pt_brand", "pd_color", "pd_size", "pt_price", "it_status"})
 	if err != nil {
 		return
 	}
@@ -72,25 +68,26 @@ func GetItemInfomation(id string) (info ItemInfomation, err error) {
 func AddUser(name, pw string, grant int) (res int64, err error) {
 	salt := saltStrRander.Get()
 	passStr := getPassHex(salt, pw)
-	return dbInsert("user", []string{"u_name", "u_salt", "u_pw", "u_grant"}, []string{name, salt, passStr, fmt.Sprintf("%d", grant)})
+	return Insert("user", []string{"u_name", "u_salt", "u_pw", "u_grant"}, []string{name, salt, passStr, fmt.Sprintf("%d", grant)})
 }
 func SetUserPassword(id, pw string) (res int64, err error) {
 	salt := saltStrRander.Get()
 	passStr := getPassHex(salt, pw)
-	return dbUpdate("user", []string{"u_salt", "u_pw"}, []string{salt, passStr}, []string{"u_id ="}, []string{id})
+	return Update("user", []string{"u_salt", "u_pw"}, []string{salt, passStr}, []string{"u_id ="}, []string{id})
 }
-func SetUserGrant(id string, grant int) (res int64, err error) {
-	return dbUpdate("user", []string{"u_grant"}, []string{fmt.Sprintf("%d", grant)}, []string{"u_id ="}, []string{id})
-}
-func RemoveUser(id string) (res int64, err error) {
-	return dbDelete("user", []string{"u_id ="}, []string{id})
-}
-func ListUser() (tb Table, err error) {
-	return dbSelect("user", nil, nil, []string{"u_id", "u_name", "u_grant"})
-}
+
+// func SetUserGrant(id string, grant int) (res int64, err error) {
+// 	return Update("user", []string{"u_grant"}, []string{fmt.Sprintf("%d", grant)}, []string{"u_id ="}, []string{id})
+// }
+// func RemoveUser(id string) (res int64, err error) {
+// 	return Delete("user", []string{"u_id ="}, []string{id})
+// }
+// func ListUser() (tb Table, err error) {
+// 	return Select("user", nil, nil, []string{"u_id", "u_name", "u_grant"})
+// }
 func GetUserID(name string) (id string, err error) {
 	id = ""
-	tb, err := dbSelect("user", []string{"u_name ="}, []string{name}, []string{"u_id"})
+	tb, err := Select("user", []string{"u_name ="}, []string{name}, []string{"u_id"})
 	if err != nil {
 		return
 	}
@@ -104,79 +101,77 @@ func GetUserID(name string) (id string, err error) {
 }
 
 //Batch
-func ListBatch() (tb Table, err error) {
-	return dbSelect("batch", nil, nil, []string{"bt_id", "bt_u_id", "bt_time"})
-}
-
-func AddBatch(uid string) (res int64, err error) {
-	return dbInsert("batch", []string{"bt_u_id"}, []string{fmt.Sprintf("%v", uid)})
-
-}
-func SetBatch(id string, change map[string]string) (res int64, err error) {
-	var key, value []string
-	keys := []string{"bt_id", "bt_u_id", "bt_time"}
-	for _, k := range keys {
-		if v, ok := change[k]; ok {
-			key = append(key, k)
-			value = append(value, v)
-		}
-	}
-	return dbUpdate("batch", key, value, []string{"bt_id ="}, []string{id})
-}
-func RemoveBatch(id string) (res int64, err error) {
-	dbDelete("item", []string{"it_bt_id ="}, []string{id})
-	return dbDelete("batch", []string{"bt_id ="}, []string{id})
-}
+// func ListBatch() (tb Table, err error) {
+// 	return Select("batch", nil, nil, []string{"bt_id", "bt_u_id", "bt_time"})
+// }
+// func AddBatch(uid string) (res int64, err error) {
+// 	return Insert("batch", []string{"bt_u_id"}, []string{fmt.Sprintf("%v", uid)})
+// }
+// func SetBatch(id string, change map[string]string) (res int64, err error) {
+// 	var key, value []string
+// 	keys := []string{"bt_id", "bt_u_id", "bt_time"}
+// 	for _, k := range keys {
+// 		if v, ok := change[k]; ok {
+// 			key = append(key, k)
+// 			value = append(value, v)
+// 		}
+// 	}
+// 	return Update("batch", key, value, []string{"bt_id ="}, []string{id})
+// }
+// func RemoveBatch(id string) (res int64, err error) {
+// 	Delete("item", []string{"it_bt_id ="}, []string{id})
+// 	return Delete("batch", []string{"bt_id ="}, []string{id})
+// }
 
 //Pattern
-func ListPattern() (tb Table, err error) {
-	return dbSelect("pattern", nil, nil, []string{"pt_id", "pt_name", "pt_brand", "pt_price"})
-}
-func AddPattern(name, brand string, price float64) (res int64, err error) {
-	return dbInsert("pattern", []string{"pt_name", "pt_brand", "pt_price"}, []string{name, brand, fmt.Sprintf("%v", price)})
-}
-func SetPattern(id string, change map[string]string) (res int64, err error) {
-	var key, value []string
-	keys := []string{"pt_id", "pt_name", "pt_brand", "pt_price"}
-	for _, k := range keys {
-		if v, ok := change[k]; ok {
-			key = append(key, k)
-			value = append(value, v)
-		}
-	}
-	return dbUpdate("pattern", key, value, []string{"pt_id ="}, []string{id})
-}
-func RemovePattern(id string) (res int64, err error) {
-	return dbDelete("pattern", []string{"pt_id ="}, []string{id})
-}
+// func ListPattern() (tb Table, err error) {
+// 	return Select("pattern", nil, nil, []string{"pt_id", "pt_name", "pt_brand", "pt_price"})
+// }
+// func AddPattern(name, brand string, price float64) (res int64, err error) {
+// 	return Insert("pattern", []string{"pt_name", "pt_brand", "pt_price"}, []string{name, brand, fmt.Sprintf("%v", price)})
+// }
+// func SetPattern(id string, change map[string]string) (res int64, err error) {
+// 	var key, value []string
+// 	keys := []string{"pt_id", "pt_name", "pt_brand", "pt_price"}
+// 	for _, k := range keys {
+// 		if v, ok := change[k]; ok {
+// 			key = append(key, k)
+// 			value = append(value, v)
+// 		}
+// 	}
+// 	return Update("pattern", key, value, []string{"pt_id ="}, []string{id})
+// }
+// func RemovePattern(id string) (res int64, err error) {
+// 	return Delete("pattern", []string{"pt_id ="}, []string{id})
+// }
 
 //Product
-func ListProduct() (tb Table, err error) {
-	return dbSelect("product", nil, nil, []string{"pd_id", "pd_pt_id", "pd_SKU", "pd_color", "pd_size"})
-}
-func AddProduct(pt_id int, SKU, color, size string) (res int64, err error) {
-	return dbInsert("product", []string{"pd_pt_id", "pd_SKU", "pd_color", "pd_size"}, []string{fmt.Sprintf("%v", pt_id), SKU, color, size})
-}
-func SetProduct(id string, change map[string]string) (res int64, err error) {
-	var key, value []string
-	keys := []string{"pd_id", "pd_pt_id", "pd_SKU", "pd_color", "pd_size"}
-	for _, k := range keys {
-		if v, ok := change[k]; ok {
-			key = append(key, k)
-			value = append(value, v)
-		}
-	}
-	return dbUpdate("product", key, value, []string{"pd_id ="}, []string{id})
-}
-func RemoveProduct(id string) (res int64, err error) {
-	dbDelete("item", []string{"it_pd_id ="}, []string{id})
-	return dbDelete("product", []string{"pd_id ="}, []string{id})
-}
+// func ListProduct() (tb Table, err error) {
+// 	return Select("product", nil, nil, []string{"pd_id", "pd_pt_id", "pd_SKU", "pd_color", "pd_size"})
+// }
+// func AddProduct(pt_id int, SKU, color, size string) (res int64, err error) {
+// 	return Insert("product", []string{"pd_pt_id", "pd_SKU", "pd_color", "pd_size"}, []string{fmt.Sprintf("%v", pt_id), SKU, color, size})
+// }
+// func SetProduct(id string, change map[string]string) (res int64, err error) {
+// 	var key, value []string
+// 	keys := []string{"pd_id", "pd_pt_id", "pd_SKU", "pd_color", "pd_size"}
+// 	for _, k := range keys {
+// 		if v, ok := change[k]; ok {
+// 			key = append(key, k)
+// 			value = append(value, v)
+// 		}
+// 	}
+// 	return Update("product", key, value, []string{"pd_id ="}, []string{id})
+// }
+// func RemoveProduct(id string) (res int64, err error) {
+// 	Delete("item", []string{"it_pd_id ="}, []string{id})
+// 	return Delete("product", []string{"pd_id ="}, []string{id})
+// }
 
 //Item
-func ListItem() (tb Table, err error) {
-	return dbSelect("item", nil, nil, []string{"it_id", "it_pd_id", "it_bt_id", "it_status"})
-}
+// func ListItem() (tb Table, err error) {
+// 	return Select("item", nil, nil, []string{"it_id", "it_pd_id", "it_bt_id", "it_status"})
+// }
 func AddItem(num, pd_id, bt_id, status int) (res int64, err error) {
 	var val [4]string
 	val[1] = fmt.Sprintf("%d", pd_id)
@@ -185,7 +180,7 @@ func AddItem(num, pd_id, bt_id, status int) (res int64, err error) {
 	for i := int64(0); i < int64(num); {
 		for {
 			val[0] = itemIDStrRander.Get()
-			tb, err := dbSelect("item", []string{"it_id ="}, val[0:1], []string{"it_id"})
+			tb, err := Select("item", []string{"it_id ="}, val[0:1], []string{"it_id"})
 			if err != nil {
 				return i, err
 			}
@@ -193,7 +188,7 @@ func AddItem(num, pd_id, bt_id, status int) (res int64, err error) {
 				break
 			}
 		}
-		res, err := dbInsert("item", []string{"it_id", "it_pd_id", "it_bt_id", "it_status"}, val[0:4])
+		res, err := Insert("item", []string{"it_id", "it_pd_id", "it_bt_id", "it_status"}, val[0:4])
 		if err != nil || res == 0 {
 			return i, err
 		}
@@ -201,23 +196,24 @@ func AddItem(num, pd_id, bt_id, status int) (res int64, err error) {
 	}
 	return int64(num), nil
 }
-func SetItem(id string, change map[string]string) (res int64, err error) {
-	var key, value []string
-	keys := []string{"item", "it_id", "it_pd_id", "it_bt_id", "it_status"}
-	for _, k := range keys {
-		if v, ok := change[k]; ok {
-			key = append(key, k)
-			value = append(value, v)
-		}
-	}
-	return dbUpdate("item", key, value, []string{"it_id ="}, []string{id})
-}
-func RemoveItem(id string) (res int64, err error) {
-	return dbDelete("item", []string{"it_id ="}, []string{id})
-}
+
+// func SetItem(id string, change map[string]string) (res int64, err error) {
+// 	var key, value []string
+// 	keys := []string{"item", "it_id", "it_pd_id", "it_bt_id", "it_status"}
+// 	for _, k := range keys {
+// 		if v, ok := change[k]; ok {
+// 			key = append(key, k)
+// 			value = append(value, v)
+// 		}
+// 	}
+// 	return Update("item", key, value, []string{"it_id ="}, []string{id})
+// }
+// func RemoveItem(id string) (res int64, err error) {
+// 	return Delete("item", []string{"it_id ="}, []string{id})
+// }
 
 // insert delete update selete
-func dbInsert(tb_name string, keys []string, values []string) (res int64, err error) {
+func Insert(tb_name string, keys []string, values []string) (res int64, err error) {
 	if len(keys) != len(values) {
 		return 0, errors.New("请求键值数量不一致")
 	}
@@ -250,7 +246,7 @@ func dbInsert(tb_name string, keys []string, values []string) (res int64, err er
 	}
 	return result.RowsAffected()
 }
-func dbDelete(tb_name string, search_keys []string, search_values []string) (res int64, err error) {
+func Delete(tb_name string, search_keys []string, search_values []string) (res int64, err error) {
 	if len(search_keys) != len(search_values) {
 		return 0, errors.New("请求键值数量不一致")
 	}
@@ -277,7 +273,7 @@ func dbDelete(tb_name string, search_keys []string, search_values []string) (res
 	}
 	return result.RowsAffected()
 }
-func dbUpdate(tb_name string, keys []string, values []string, search_keys []string, search_values []string) (res int64, err error) {
+func Update(tb_name string, keys []string, values []string, search_keys []string, search_values []string) (res int64, err error) {
 	if len(keys) != len(values) {
 		return 0, errors.New("请求键值数量不一致")
 	}
@@ -314,7 +310,7 @@ func dbUpdate(tb_name string, keys []string, values []string, search_keys []stri
 	}
 	return result.RowsAffected()
 }
-func dbSelect(tb_name string, search_keys []string, search_values []string, keys []string) (ret Table, err error) {
+func Select(tb_name string, search_keys []string, search_values []string, keys []string) (ret Table, err error) {
 	ret.Init(keys...)
 	if len(search_keys) != len(search_values) {
 		return ret, errors.New("请求键值数量不一致")
