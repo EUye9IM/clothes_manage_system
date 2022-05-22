@@ -249,7 +249,6 @@ layui.use(['element', 'form', 'layer', 'table'], function () {
 					xmlhttp.open("POST", "/api/del_user/", true);
 					xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 					xmlhttp.send(toURL(upload_data))
-					layer.close(index);
 				});
 				break;
 		};

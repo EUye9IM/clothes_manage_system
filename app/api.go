@@ -296,6 +296,13 @@ func routeApi(e *gin.Engine) {
 			})
 			return
 		}
+		if uid == strconv.Itoa(uinfo.ID) {
+			c.JSON(http.StatusOK, gin.H{
+				"res": false,
+				"msg": "不能修改自身账号",
+			})
+			return
+		}
 		if password != "" {
 			ret, err := dbconn.SetUserPassword(uid, password)
 			if err != nil || ret != 1 {
