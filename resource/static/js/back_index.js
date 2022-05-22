@@ -11,6 +11,12 @@ layui.use(['element', 'form', 'layer', 'table'], function () {
 		form = layui.form,
 		layer = layui.layer,
 		table = layui.table;
+
+	//init
+	if (UINFO.Grant & GRANT_USER){
+		$('#menu-grant-user').removeClass("layui-hide")
+	}
+	
 	// 更改密码
 	form.on('submit(change-password)', function (data) {
 		if (data.field["new-passwd"] != data.field["new-passwd2"]) {
