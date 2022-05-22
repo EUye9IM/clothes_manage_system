@@ -262,7 +262,8 @@ func routeApi(e *gin.Engine) {
 			}
 			return
 		}
-		log.Println("user id:" + strconv.Itoa(uinfo.ID) + " add_user " + name)
+		id, _ := dbconn.GetUserID(name)
+		log.Println("user id:" + strconv.Itoa(uinfo.ID) + " add_user id:" + id + " name:" + name)
 		c.JSON(http.StatusOK, gin.H{
 			"res": true,
 			"msg": "添加成功。",
@@ -319,6 +320,58 @@ func routeApi(e *gin.Engine) {
 		c.JSON(http.StatusOK, gin.H{
 			"res": true,
 			"msg": "修改成功。",
+		})
+	})
+
+	/*
+		del_user
+		post
+			uid
+		ret json
+			res
+			msg
+	*/
+	route_group.POST("/del_user/", func(c *gin.Context) {
+		ok, uinfo, _ := checkgrant(c, dbconn.GRANT_USER)
+		if !ok {
+			return
+		}
+		var err error
+		uid := c.PostForm("uid")
+
+		if uid == "" {
+			c.JSON(http.StatusOK, gin.H{
+				"res": false,
+				"msg": "id不能为空",
+			})
+			return
+		}
+		if uid == strconv.Itoa(uinfo.ID) {
+			c.JSON(http.StatusOK, gin.H{
+				"res": false,
+				"msg": "不能删除自身账号",
+			})
+			return
+		}
+		ret, err := dbconn.Delete("user", []string{"u_id ="}, []string{uid})
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"res": false,
+				"msg": "错误。请联系管理。【" + srcLoc() + "】" + err.Error(),
+			})
+			return
+		}
+		if ret != 1 {
+			c.JSON(http.StatusOK, gin.H{
+				"res": false,
+				"msg": "错误。请联系管理。【" + srcLoc() + "】",
+			})
+			return
+		}
+		log.Println("user id:" + strconv.Itoa(uinfo.ID) + " remove_user id:" + uid)
+		c.JSON(http.StatusOK, gin.H{
+			"res": true,
+			"msg": "删除成功。",
 		})
 	})
 }

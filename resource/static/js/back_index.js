@@ -218,7 +218,33 @@ layui.use(['element', 'form', 'layer', 'table'], function () {
 				});
 				break;
 			case 'delete':
-				layer.msg("deluser todo");
+				layer.confirm('确定删除用户“'+obj.data.name+'”?', {
+					btn: ['确定', '取消'] //按钮
+				}, function () {
+					var upload_data = {
+						"uid": obj.data.id,
+					};
+					xmlhttp.onreadystatechange = function () {
+						if (xmlhttp.readyState == 4) {
+							if (xmlhttp.status == 200) {
+								var res = JSON.parse(xmlhttp.response)
+								layer.msg(res.msg);
+								if (res.res) {
+									$('#user-name-search').val("")
+									table.reload('tb-user', {
+										url: '/api/select_user/',
+									}, true)
+								}
+							} else {
+								layer.msg("服务器连接失败：" + xmlhttp.status)
+							}
+						}
+					}
+					xmlhttp.open("POST", "/api/del_user/", true);
+					xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+					xmlhttp.send(toURL(upload_data))
+					layer.close(index);
+				});
 				break;
 		};
 	});
