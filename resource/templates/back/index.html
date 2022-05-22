@@ -55,7 +55,7 @@
 					<fieldset class="layui-elem-field">
 						<legend>用户管理</legend>
 						<div class="layui-field-box">
-							<form class="layui-form" action="">
+							<form class="layui-form" onsubmit="return false;">
 								<label class="layui-form-label">检索用户</label>
 								<div class="layui-input-inline">
 									<input type="text" id="user-name-search" class="layui-input" placeholder="输入用户名">
@@ -147,15 +147,15 @@
 		<button class="layui-btn layui-btn-xs" lay-event="delete">删除</button>
 	</script>
 	<div id="user-layer-add" style="display: none;">
-		<form class="layui-form" style="margin:20px;">
+		<form class="layui-form" style="margin:20px;" onsubmit="return false;">
 			<label class="layui-form-label">用户名</label>
 			<div class="layui-input-inline">
-				<input type="text" id="user-layer-username" class="layui-input">
+				<input type="text" id="user-layer-add-username" class="layui-input">
 			</div>
 			<br>
 			<label class="layui-form-label">初始密码</label>
 			<div class="layui-input-inline">
-				<input type="password" id="user-layer-password" class="layui-input">
+				<input type="password" id="user-layer-add-password" class="layui-input">
 			</div>
 			<br>
 			<label class="layui-form-label">权限</label>
@@ -166,6 +166,24 @@
 				<input type="checkbox" id="user-layer-add-grant-item-read" title="读取商品"><br>
 				<input type="checkbox" id="user-layer-add-grant-item-add" title="添加商品"><br>
 				<input type="checkbox" id="user-layer-add-grant-item-edit" title="编辑商品"><br>
+			</div>
+		</form>
+	</div>
+	<div id="user-layer-edit" style="display: none;">
+		<form class="layui-form" style="margin:20px;" onsubmit="return false;">
+			<label class="layui-form-label">修改密码</label>
+			<div class="layui-input-inline">
+				<input type="password" id="user-layer-edit-password" class="layui-input" placeholder="不修改">
+			</div>
+			<br>
+			<label class="layui-form-label">修改权限</label>
+			<div class="layui-input-inline">
+				<input type="checkbox" id="user-layer-edit-grant-user" title="用户编辑"><br>
+				<input type="checkbox" id="user-layer-edit-grant-product-add" title="添加品类"><br>
+				<input type="checkbox" id="user-layer-edit-grant-product-edit" title="编辑品类"><br>
+				<input type="checkbox" id="user-layer-edit-grant-item-read" title="读取商品"><br>
+				<input type="checkbox" id="user-layer-edit-grant-item-add" title="添加商品"><br>
+				<input type="checkbox" id="user-layer-edit-grant-item-edit" title="编辑商品"><br>
 			</div>
 		</form>
 	</div>

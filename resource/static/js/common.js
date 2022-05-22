@@ -1,3 +1,4 @@
+var $ = layui.$;
 xmlhttp = new XMLHttpRequest();
 function toURL(data) {
 	var tmparr = [];

@@ -4,8 +4,6 @@ const GRANT_PRODUCT_EDIT = 4;
 const GRANT_ITEM_READ = 8;
 const GRANT_ITEM_ADD = 16;
 const GRANT_ITEM_EDIT = 32;
-
-
 var $ = layui.$;
 
 layui.use(['element', 'form', 'layer', 'table'], function () {
@@ -76,7 +74,7 @@ layui.use(['element', 'form', 'layer', 'table'], function () {
 			{ field: 'edit', width: '15%', toolbar: '#user-tool' },
 		]],
 		toolbar: '#user-toolbar',
-		page: true,
+	//	page: true,
 	})
 	$('#user-name-search').on("input", function (e) {
 		setTimeout(function () {
@@ -91,7 +89,7 @@ layui.use(['element', 'form', 'layer', 'table'], function () {
 	table.on('toolbar(tb-user)', function (obj) {
 		switch (obj.event) {
 			case 'add':
-				$("#user-layer-username").val("");
+				$("#user-layer-add-username").val("");
 				layer.open({
 					type: 1,
 					content: $("#user-layer-add"),
@@ -119,8 +117,8 @@ layui.use(['element', 'form', 'layer', 'table'], function () {
 							grant += GRANT_ITEM_EDIT;
 						}
 						var upload_data = {
-							"name": $("#user-layer-username").val(),
-							"password": $("#user-layer-password").val(),
+							"name": $("#user-layer-add-username").val(),
+							"password": $("#user-layer-add-password").val(),
 							"grant": grant,
 						};
 						if (upload_data.name == "" || upload_data.password == "") {
@@ -154,10 +152,70 @@ layui.use(['element', 'form', 'layer', 'table'], function () {
 	});
 
 	table.on('tool(tb-user)', function (obj) {
-		console.log(obj)
 		switch (obj.event) {
 			case 'edit':
-				layer.msg("setuser todo");
+				id = obj.data.id;
+				grant = obj.data.grant;
+				$("#user-layer-edit-grant-user").prop("checked", Boolean(grant & GRANT_USER));
+				$("#user-layer-edit-grant-product-add").prop("checked", Boolean(grant & GRANT_PRODUCT_ADD));
+				$("#user-layer-edit-grant-product-edit").prop("checked", Boolean(grant & GRANT_PRODUCT_EDIT));
+				$("#user-layer-edit-grant-item-read").prop("checked", Boolean(grant & GRANT_ITEM_READ));
+				$("#user-layer-edit-grant-item-add").prop("checked", Boolean(grant & GRANT_ITEM_ADD));
+				$("#user-layer-edit-grant-item-edit").prop("checked", Boolean(grant & GRANT_ITEM_EDIT));
+				layui.form.render();
+				layer.open({
+					type: 1,
+					content: $("#user-layer-edit"),
+					title: '编辑用户',
+					btn: '保存',
+					resize: false,
+					scrollbar: false,
+					yes: function (index, layero) {
+						var grant = 0;
+						if ($("#user-layer-edit-grant-user").prop("checked"))
+							grant += GRANT_USER;
+						if ($("#user-layer-edit-grant-product-add").prop("checked")) {
+							grant += GRANT_PRODUCT_ADD;
+						}
+						if ($("#user-layer-edit-grant-product-edit").prop("checked")) {
+							grant += GRANT_PRODUCT_EDIT;
+						}
+						if ($("#user-layer-edit-grant-item-read").prop("checked")) {
+							grant += GRANT_ITEM_READ;
+						}
+						if ($("#user-layer-edit-grant-item-add").prop("checked")) {
+							grant += GRANT_ITEM_ADD;
+						}
+						if ($("#user-layer-edit-grant-item-edit").prop("checked")) {
+							grant += GRANT_ITEM_EDIT;
+						}
+						var upload_data = {
+							"uid": id,
+							"password": $("#user-layer-edit-password").val(),
+							"grant": grant,
+						};
+						xmlhttp.onreadystatechange = function () {
+							if (xmlhttp.readyState == 4) {
+								if (xmlhttp.status == 200) {
+									var res = JSON.parse(xmlhttp.response)
+									layer.msg(res.msg);
+									if (res.res) {
+										$('#user-name-search').val("")
+										table.reload('tb-user', {
+											url: '/api/select_user/',
+										}, true)
+									}
+								} else {
+									layer.msg("服务器连接失败：" + xmlhttp.status)
+								}
+							}
+						}
+						xmlhttp.open("POST", "/api/set_user/", true);
+						xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+						xmlhttp.send(toURL(upload_data))
+						layer.close(index);
+					},
+				});
 				break;
 			case 'delete':
 				layer.msg("deluser todo");

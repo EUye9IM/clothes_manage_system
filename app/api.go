@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"log"
 	"manage_system/config"
 	"manage_system/dbconn"
@@ -225,22 +224,8 @@ func routeApi(e *gin.Engine) {
 		var err error
 		name := c.PostForm("name")
 		password := c.PostForm("password")
-
-		g_u := c.PostForm("grant-user")
-		g_pa := c.PostForm("grant-product-add")
-		g_pe := c.PostForm("grant-product-edit")
-		g_ir := c.PostForm("grant-item-read")
-		g_ia := c.PostForm("grant-item-add")
-		g_ie := c.PostForm("grant-item-edit")
-
-		fmt.Println(g_u,
-			g_pa,
-			g_pe,
-			g_ir,
-			g_ia,
-			g_ie)
-
 		grant, err := strconv.Atoi(c.PostForm("grant"))
+
 		if name == "" {
 			c.JSON(http.StatusOK, gin.H{
 				"res": false,
@@ -280,7 +265,60 @@ func routeApi(e *gin.Engine) {
 		log.Println("user id:" + strconv.Itoa(uinfo.ID) + " add_user " + name)
 		c.JSON(http.StatusOK, gin.H{
 			"res": true,
-			"msg": "添加成功",
+			"msg": "添加成功。",
+		})
+	})
+	/*
+		set_user
+		post
+			uid
+			password
+			grant
+		ret json
+			res
+			msg
+	*/
+	route_group.POST("/set_user/", func(c *gin.Context) {
+		ok, uinfo, _ := checkgrant(c, dbconn.GRANT_USER)
+		if !ok {
+			return
+		}
+		var err error
+		uid := c.PostForm("uid")
+		password := c.PostForm("password")
+		grant := c.PostForm("grant")
+
+		if uid == "" {
+			c.JSON(http.StatusOK, gin.H{
+				"res": false,
+				"msg": "id不能为空",
+			})
+			return
+		}
+		if password != "" {
+			ret, err := dbconn.SetUserPassword(uid, password)
+			if err != nil || ret != 1 {
+				c.JSON(http.StatusOK, gin.H{
+					"res": false,
+					"msg": "uid 不正确",
+				})
+				return
+			}
+		}
+		_, err = dbconn.Update("user", []string{"u_grant"}, []string{grant}, []string{"u_id ="}, []string{uid})
+		if err != nil {
+			if err != nil {
+				c.JSON(http.StatusOK, gin.H{
+					"res": false,
+					"msg": "错误。请联系管理。【" + srcLoc() + "】" + err.Error(),
+				})
+			}
+			return
+		}
+		log.Println("user id:" + strconv.Itoa(uinfo.ID) + " set_user id:" + uid + " grant:" + grant)
+		c.JSON(http.StatusOK, gin.H{
+			"res": true,
+			"msg": "修改成功。",
 		})
 	})
 }
