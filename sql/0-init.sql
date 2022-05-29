@@ -52,7 +52,7 @@ CREATE TABLE `item` (
   `it_id` char(24) NOT NULL,
   `it_pd_id` int(11) NOT NULL,
   `it_bt_id` int(11) NOT NULL,
-  `it_status` int(11) NOT NULL DEFAULT 0,
+  -- `it_status` int(11) NOT NULL DEFAULT 0,
   PRIMARY KEY (`it_id`),
   KEY `it_pd_id` (`it_pd_id`),
   KEY `it_bt_id` (`it_bt_id`),
@@ -105,9 +105,9 @@ DROP TABLE IF EXISTS `product`;
 CREATE TABLE `product` (
   `pd_id` int(11) NOT NULL AUTO_INCREMENT,
   `pd_pt_id` int(11) NOT NULL,
-  `pd_SKU` decimal(14,0) NOT NULL,
-  `pd_color` char(32) NOT NULL,
-  `pd_size` char(32) NOT NULL,
+  `pd_SKU` char(14),
+  `pd_color` char(32),
+  `pd_size` char(32),
   PRIMARY KEY (`pd_id`),
   KEY `pd_pt_id` (`pd_pt_id`),
   CONSTRAINT `product_ibfk_1` FOREIGN KEY (`pd_pt_id`) REFERENCES `pattern` (`pt_id`)

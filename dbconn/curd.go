@@ -13,8 +13,9 @@ const (
 	GRANT_ITEM_READ
 	GRANT_ITEM_ADD
 	GRANT_ITEM_EDIT
+	GRANT_DEL
 
-	// GRANT_SUPER = (1 << iota) - 1
+	GRANT_SUPER = (1 << iota) - 1
 )
 
 type ItemInfomation struct {
@@ -31,10 +32,10 @@ type Table struct {
 	Content [][]string
 }
 
-func (tb *Table) Init(header ...string) {
-	tb.Header = header[:]
-	tb.Content = nil
-}
+// func (tb *Table) Init(header ...string) {
+// 	tb.Header = header[:]
+// 	tb.Content = nil
+// }
 
 var saltStrRander, itemIDStrRander RandStringMaker
 
@@ -188,11 +189,11 @@ func AddItem(num, pd_id, bt_id, status int) (res int64, err error) {
 				break
 			}
 		}
-		res, err := Insert("item", []string{"it_id", "it_pd_id", "it_bt_id", "it_status"}, val[0:4])
-		if err != nil || res == 0 {
+		_, err := Insert("item", []string{"it_id", "it_pd_id", "it_bt_id", "it_status"}, val[0:4])
+		if err != nil {
 			return i, err
 		}
-		i += res
+		i += 1
 	}
 	return int64(num), nil
 }
@@ -244,7 +245,7 @@ func Insert(tb_name string, keys []string, values []string) (res int64, err erro
 	if err != nil {
 		return 0, err
 	}
-	return result.RowsAffected()
+	return result.LastInsertId()
 }
 func Delete(tb_name string, search_keys []string, search_values []string) (res int64, err error) {
 	if len(search_keys) != len(search_values) {
@@ -311,7 +312,7 @@ func Update(tb_name string, keys []string, values []string, search_keys []string
 	return result.RowsAffected()
 }
 func Select(tb_name string, search_keys []string, search_values []string, keys []string) (ret Table, err error) {
-	ret.Init(keys...)
+	// ret.Init(keys...)
 	if len(search_keys) != len(search_values) {
 		return ret, errors.New("请求键值数量不一致")
 	}
@@ -343,6 +344,11 @@ func Select(tb_name string, search_keys []string, search_values []string, keys [
 		return ret, err
 	}
 	defer rows.Close()
+
+	ret.Header, err = rows.Columns()
+	if err != nil {
+		return ret, err
+	}
 
 	for rows.Next() {
 		new_row := make([]string, col_num)

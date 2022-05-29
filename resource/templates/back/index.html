@@ -34,7 +34,8 @@
 				<!-- 左侧导航区域（可配合layui已有的垂直导航） -->
 				<ul class="layui-nav layui-nav-tree" lay-filter="test">
 					<li class="layui-nav-item layui-this"><a href="javascript:showContent('#cover')">首页</a></li>
-					<li class="layui-nav-item layui-hide" id="menu-grant-user"><a href="javascript:showContent('#user')">用户管理</a></li>
+					<li class="layui-nav-item layui-hide WITH_GRANT_USER"><a
+							href="javascript:showContent('#user')">用户管理</a></li>
 					<li class="layui-nav-item"><a href="javascript:showContent('#product')">品类管理</a></li>
 					<li class="layui-nav-item"><a href="javascript:showContent('#item')">商品管理</a></li>
 				</ul>
@@ -70,6 +71,13 @@
 					<fieldset class="layui-elem-field">
 						<legend>品类管理</legend>
 						<div class="layui-field-box">
+							<form class="layui-form" onsubmit="return false;">
+								<label class="layui-form-label">检索品类</label>
+								<div class="layui-input-inline">
+									<input type="text" id="pattern-search" class="layui-input" placeholder="输入名字或品牌">
+								</div>
+							</form>
+							<table id="tb-pattern" lay-filter="tb-pattern"></table>
 						</div>
 					</fieldset>
 				</div>
@@ -78,6 +86,7 @@
 					<fieldset class="layui-elem-field">
 						<legend>商品管理</legend>
 						<div class="layui-field-box">
+							<table id="tb-pattern" lay-filter="tb-pattern"></table>
 						</div>
 					</fieldset>
 				</div>
@@ -133,9 +142,7 @@
 			<a href="https://beian.miit.gov.cn/" target="_blank">某ICP证xxxxxx号</a> 假装有备案号
 		</div>
 	</div>
-	<script>
-		const UINFO = [[[.user]]]
-	</script>
+
 	<script src="/static/layui/layui.js"></script>
 	<script src="/static/js/common.js"></script>
 	<script src="/static/js/back_index.js"></script>
@@ -169,6 +176,7 @@
 				<input type="checkbox" id="user-layer-add-grant-item-read" title="读取商品"><br>
 				<input type="checkbox" id="user-layer-add-grant-item-add" title="添加商品"><br>
 				<input type="checkbox" id="user-layer-add-grant-item-edit" title="编辑商品"><br>
+				<input type="checkbox" id="user-layer-add-grant-del" title="删除条目"><br>
 			</div>
 		</form>
 	</div>
@@ -187,9 +195,84 @@
 				<input type="checkbox" id="user-layer-edit-grant-item-read" title="读取商品"><br>
 				<input type="checkbox" id="user-layer-edit-grant-item-add" title="添加商品"><br>
 				<input type="checkbox" id="user-layer-edit-grant-item-edit" title="编辑商品"><br>
+				<input type="checkbox" id="user-layer-edit-grant-del" title="删除条目"><br>
 			</div>
 		</form>
 	</div>
+	<!-- 品类管理 -->
+	<script type="text/html" id="pattern-toolbar">
+		<a class="layui-btn layui-btn-sm WITH_GRANT_PRODUCT_ADD layui-hide" lay-event="add">添加品类</a>
+	</script>
+	<script type="text/html" id="pattern-tool">
+		<button class="layui-btn layui-btn-xs WITH_GRANT_PRODUCT_ADD layui-hide" lay-event="add">添加款式</button>
+		<button class="layui-btn layui-btn-xs WITH_GRANT_DEL layui-hide" lay-event="delete">删除</button>
+	</script>
+	<div id="pattern-layer-add" style="display: none;">
+		<form class="layui-form" style="margin:20px;" onsubmit="return false;">
+			<label class="layui-form-label">品名</label>
+			<div class="layui-input-inline">
+				<input type="text" id="pattern-layer-add-name" class="layui-input">
+			</div>
+			<br>
+			<label class="layui-form-label">品牌</label>
+			<div class="layui-input-inline">
+				<input type="text" id="pattern-layer-add-brand" class="layui-input">
+			</div>
+			<br>
+			<label class="layui-form-label">价格</label>
+			<div class="layui-input-inline">
+				<input type="text" id="pattern-layer-add-price" class="layui-input">
+			</div>
+		</form>
+	</div>
+	<div id="pattern-layer-show-product" style="display: none;"></div>
+	<script id="pattern-layer-show-productTpl" type="text/html">
+		<table id="tb-product" lay-filter="tb-product">
+			<thead>
+				<tr>
+					<th lay-data="{field:'id', width:100, sort:true}">ID</th>
+					<th lay-data="{field:'SKU', width:300,  sort:true}">SKU</th>
+					<th lay-data="{field:'color', width:150,  sort:true}">颜色</th>
+					<th lay-data="{field:'size',  width:150, sort:true}">规格</th>
+					<th lay-data="{field:'option', width:100 }"></th>
+				</tr>
+			</thead>
+			<tbody>
+				{{# layui.each(d.data, function(index, item) { }}
+				<tr>
+					<td>{{ item.id }}</td>
+					<td>{{ item.SKU }}</td>
+					<td>{{ item.color }}</td>
+					<td>{{ item.size }}</td>
+					<td><button class="layui-btn layui-btn-xs  WITH_GRANT_DEL layui-hide" onclick="delProduct({{ item.id }}) ">删除</button></td>
+				</tr>
+				{{# }); }}
+			</tbody>
+		</table>
+	</script>
+	<div id="pattern-layer-add-product" style="display: none;">
+		<form class="layui-form" style="margin:20px;" onsubmit="return false;">
+			<label class="layui-form-label">SKU</label>
+			<div class="layui-input-inline">
+				<input type="text" id="pattern-layer-add-SKU" class="layui-input">
+			</div>
+			<br>
+			<label class="layui-form-label">颜色</label>
+			<div class="layui-input-inline">
+				<input type="text" id="pattern-layer-add-color" class="layui-input">
+			</div>
+			<br>
+			<label class="layui-form-label">规格</label>
+			<div class="layui-input-inline">
+				<input type="text" id="pattern-layer-add-size" class="layui-input">
+			</div>
+		</form>
+	</div>
+	<script>
+		//init
+		const UINFO = [[[.user]]]
+		init();
+	</script>
 </body>
 
 
