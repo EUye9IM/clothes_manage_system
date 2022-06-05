@@ -399,7 +399,14 @@ func routeApi(e *gin.Engine) {
 		RET JSON
 			res
 			msg
+			count
+			data JSON LIST
+				id
+				name
+				brand
+				price
 	*/
+
 	route_group.GET("/select_pattern/", func(c *gin.Context) {
 		ok, _, _ := checkgrant(c, -1)
 		if !ok {
@@ -553,7 +560,7 @@ func routeApi(e *gin.Engine) {
 	// 品类-规格
 	/**	select_product
 	GET
-		id ptid
+		ptid ptid
 	RET
 		code int 0 true -1 false
 		msg string
@@ -750,6 +757,94 @@ func routeApi(e *gin.Engine) {
 		c.JSON(http.StatusOK, gin.H{
 			"res":   true,
 			"msg":   "删除成功。",
+			"count": len(data),
+			"data":  data,
+		})
+	})
+
+	// 商品管理
+	/**	add_batch
+	POST
+		data JSON
+			pdid: count
+	RET JSON
+			res
+			msg
+	*/
+	route_group.POST("/add_batch/", func(c *gin.Context) {
+		ok, _, _ := checkgrant(c, dbconn.GRANT_ITEM_ADD)
+		if !ok {
+			return
+		}
+		//	var err error
+		raw_data := c.PostForm("data")
+
+		if raw_data == "" {
+			c.JSON(http.StatusOK, gin.H{
+				"res": false,
+				"msg": "品类 id 不能为空",
+			})
+			return
+		}
+
+		// ret, err := dbconn.Insert("product", []string{"pd_pt_id", "pd_SKU", "pd_color", "pd_size"}, []string{ptid, SKU, color, size})
+		// if err != nil {
+		// 	c.JSON(http.StatusOK, gin.H{
+		// 		"res": false,
+		// 		"msg": "错误。" + err.Error(),
+		// 	})
+		// 	return
+		// }
+		// log.Println("user id:" + strconv.Itoa(uinfo.ID) + " add_pattern id:" + strconv.Itoa(int(ret)) + " SKU:" + SKU + " color:" + color + " size:" + size)
+		// c.JSON(http.StatusOK, gin.H{
+		// 	"res": true,
+		// 	"msg": "添加成功。",
+		// })
+	})
+	/**	select_batch
+	GET
+	RET
+		code int 0 true -1 false
+		msg string
+		count int
+		data LIST JSON
+			id
+			uid
+			time
+			count
+	*/
+	route_group.GET("/select_batch/", func(c *gin.Context) {
+		ok, _, _ := checkgrant(c, -1)
+		if !ok {
+			return
+		}
+		var tb dbconn.Table
+		var err error
+		tb, err = dbconn.SelectEX("batch b LEFT JOIN item i ON b.bt_id = i.it_bt_id", nil, nil,
+			[]string{"bt_id as id", "bt_u_id as uid", "bt_time as time", "count(*) as count"}, " GROUP BY bt_id", nil)
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"code":  -1,
+				"msg":   "错误。请联系管理。【" + srcLoc() + "】" + err.Error(),
+				"count": 0,
+				"data":  []gin.H{},
+			})
+			return
+		}
+
+		data, err := tbToJson(&tb)
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"code":  -1,
+				"msg":   "错误。请联系管理。【" + srcLoc() + "】",
+				"count": 0,
+				"data":  []gin.H{},
+			})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"code":  0,
+			"msg":   "成功。",
 			"count": len(data),
 			"data":  data,
 		})

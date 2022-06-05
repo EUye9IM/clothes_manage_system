@@ -367,3 +367,65 @@ func Select(tb_name string, search_keys []string, search_values []string, keys [
 	}
 	return
 }
+func SelectEX(tb_name string, search_keys []string, search_values []string, keys []string, extra string, ex_value []string) (ret Table, err error) {
+	// ret.Init(keys...)
+	if len(search_keys) != len(search_values) {
+		return ret, errors.New("请求键值数量不一致")
+	}
+	col_num := len(keys)
+	qstr := "SELECT "
+	for i, s := range keys {
+		if i != 0 {
+			qstr += ", "
+		}
+		qstr += s
+	}
+	qstr += " FROM " + tb_name
+
+	for i, s := range search_keys {
+		if i == 0 {
+			qstr += " WHERE "
+		} else {
+			qstr += " and "
+		}
+		qstr += s + " ?"
+	}
+	if extra != "" {
+		qstr += " " + extra
+	}
+	values_interface := make([]interface{}, len(search_values))
+	for i, v := range search_values {
+		values_interface[i] = v
+	}
+	if ex_value != nil {
+		values_interface = append(values_interface, ex_value)
+	}
+	//fmt.Println(qstr, search_values)
+	rows, err := db.Query(qstr, values_interface...)
+	if err != nil {
+		return ret, err
+	}
+	defer rows.Close()
+
+	ret.Header, err = rows.Columns()
+	if err != nil {
+		return ret, err
+	}
+
+	for rows.Next() {
+		new_row := make([]string, col_num)
+		pointers := make([]interface{}, col_num)
+		for i := 0; i < col_num; i++ {
+			pointers[i] = &new_row[i]
+		}
+		if err = rows.Scan(pointers...); err != nil {
+			return ret, err // Handle scan error
+		}
+		ret.Content = append(ret.Content, new_row)
+	}
+	// check iteration error
+	if rows.Err() != nil {
+		fmt.Println(err)
+	}
+	return
+}

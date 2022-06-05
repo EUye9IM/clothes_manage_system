@@ -298,6 +298,7 @@ layui.use(['element', 'form', 'layer', 'table', 'laytpl'], function () {
 				break;
 		};
 	});
+	table.on('sort(tb-user)', function (obj) { init() })
 
 	//品类管理
 
@@ -452,11 +453,166 @@ layui.use(['element', 'form', 'layer', 'table', 'laytpl'], function () {
 				break;
 		};
 	});
-
+	table.on('sort(tb-pattern)', function (obj) { init() })
 	// 商品管理
+	table.render({
+		elem: '#tb-batch',
+		height: 'full-300',
+		url: '/api/select_batch',
+		cols: [[
+			{ field: 'id', title: 'ID', width: '10%', sort: true },
+			{ field: 'uid', title: '管理员ID', width: '10%' },
+			{ field: 'time', title: '时间', width: '45%' },
+			{ field: 'count', title: '数量', width: '15%' },
+			//	{ field: 'option', title: '', width: '15%', toolbar: '#batch-tool' },
+		]],
+		toolbar: '#batch-toolbar',
+		done: (res, curr, count) => { init(); },
+		//	page: true,
+	})
 
+	table.on('toolbar(tb-batch)', function (obj) {
+		switch (obj.event) {
+			case 'add':
+				$('#batch-layer-add-pattern').html("<option value = '' >请选择</option>");
+				$('#batch-layer-add-product').html("");
+				batch_layer_add_upload = {}
+				updateBatchUpload()
+				form.render(null, 'form-batch-layer-add');
+				xmlhttp.onreadystatechange = function () {
+					if (xmlhttp.readyState == 4) {
+						if (xmlhttp.status == 200) {
+							var res = JSON.parse(xmlhttp.response)
+							if (res.code == 0) {
+								var h = "<option value = '' >请选择</option>";
+								for (i in res.data) {
+									h += "<option value = '" + res.data[i].id + "' >" + res.data[i].brand + " - " + res.data[i].name + "</option>";
+								}
+								$('#batch-layer-add-pattern').html(h);
+								form.render(null, 'form-batch-layer-add');
+							} else {
+								layer.msg(res.msg)
+							}
+						} else {
+							layer.msg("服务器连接失败：" + xmlhttp.status)
+						}
+					}
+				}
+				xmlhttp.open("GET", "/api/select_pattern/", true);
+				// xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+				xmlhttp.send()
+
+				layer.open({
+					type: 1,
+					content: $("#batch-layer-add"),
+					title: '添加商品',
+					btn: '添加商品',
+					// resize: false,
+					// scrollbar: false,
+					yes: function (index, layero) {
+						for (i in batch_layer_add_upload) {
+							delete batch_layer_add_upload[i]["text"];
+						}
+						var upload_data = {
+							data: batch_layer_add_upload
+						};
+						if (Object.keys(batch_layer_add_upload).length == 0) {
+							layer.msg("商品不能为空")
+						} else {
+							xmlhttp.onreadystatechange = function () {
+								if (xmlhttp.readyState == 4) {
+									if (xmlhttp.status == 200) {
+										var res = JSON.parse(xmlhttp.response)
+										layer.msg(res.msg);
+										if (res.res) {
+											$('#pattern-search').val("")
+											table.reload('tb-pattern', {
+												url: '/api/select_pattern/',
+											}, true)
+										}
+									} else {
+										layer.msg("服务器连接失败：" + xmlhttp.status)
+									}
+								}
+							}
+							xmlhttp.open("POST", "/api/add_pattern/", true);
+							xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+							xmlhttp.send(toURL(upload_data))
+							layer.close(index);
+						}
+					},
+				});
+				break;
+		};
+	});
+	form.on('select(batch-layer-add-pattern)', function (data) {
+		if (data.value == "") {
+			$('#batch-layer-add-product').html("");
+			form.render(null, 'form-batch-layer-add');
+			return
+		}
+		var upload_data = {
+			"ptid": data.value
+		}
+		xmlhttp.onreadystatechange = function () {
+			if (xmlhttp.readyState == 4) {
+				if (xmlhttp.status == 200) {
+					var res = JSON.parse(xmlhttp.response)
+					if (res.code == 0) {
+						var h = "<option value = '' >请选择</option>";
+						for (i in res.data) {
+							h += "<option value = '" + res.data[i].id + "' >" + res.data[i].SKU + " - " + res.data[i].color + " - " + res.data[i].size + "</option>";
+						}
+						$('#batch-layer-add-product').html(h);
+						form.render(null, 'form-batch-layer-add');
+					} else {
+						layer.msg(res.msg)
+					}
+				} else {
+					layer.msg("服务器连接失败：" + xmlhttp.status)
+				}
+			}
+		}
+		xmlhttp.open("GET", "/api/select_product/?" + toURL(upload_data), true);
+		// xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+		xmlhttp.send()
+	});
+	form.on("submit(batch-layer-add-add)", (data) => {
+		id = $("#batch-layer-add-product").val();
+		num = Number($("#batch-layer-add-count").val());
+
+		if (id == "" || num == 0)
+			return
+
+		// console.log(id, num)
+		text = data.form[1].value + " - " + data.form[3].value;
+		if (batch_layer_add_upload[id]) {
+			batch_layer_add_upload[id].num += num;
+		} else {
+			batch_layer_add_upload[id] = { "text": text, "num": num };
+		}
+
+		updateBatchUpload();
+	})
 
 });
+
+
+function updateBatchUpload() {
+	html = ""
+	for (i in batch_layer_add_upload) {
+		html += "<tr>"
+		html += "<td>" + i + "</td>";
+		html += "<td>" + batch_layer_add_upload[i]["text"] + "</td>";
+		html += "<td>" + batch_layer_add_upload[i]["num"] + "</td>";
+		html += "<td><button class='layui-btn layui-btn-sm' onclick='delete batch_layer_add_upload[" + i + "];updateBatchUpload();'>删除</button></td>";
+		html += "</tr>"
+	}
+	$("#batch-layer-add-data").html(html);
+	layui.table.init('batch-layer-add-tb')
+}
+
+
 
 function showContent(select) {
 	$(".body-content").addClass("layui-hide");
