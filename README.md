@@ -46,6 +46,9 @@ manage_system
 - 图片存储
 - 发布公告
 - 价格从 pattern 移到 product
+
+- **修改数据库为线程安全**
+
 ## 好的特性
 
 - 大量使用 ajax 提升前端使用体验

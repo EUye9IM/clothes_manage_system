@@ -461,9 +461,9 @@ layui.use(['element', 'form', 'layer', 'table', 'laytpl'], function () {
 		url: '/api/select_batch',
 		cols: [[
 			{ field: 'id', title: 'ID', width: '10%', sort: true },
-			{ field: 'uid', title: '管理员ID', width: '10%' },
-			{ field: 'time', title: '时间', width: '45%' },
-			{ field: 'count', title: '数量', width: '15%' },
+			{ field: 'uid', title: '管理员ID', width: '10%', sort: true },
+			{ field: 'time', title: '时间', width: '45%', sort: true },
+			{ field: 'count', title: '数量', width: '15%', sort: true },
 			//	{ field: 'option', title: '', width: '15%', toolbar: '#batch-tool' },
 		]],
 		toolbar: '#batch-toolbar',
@@ -511,10 +511,11 @@ layui.use(['element', 'form', 'layer', 'table', 'laytpl'], function () {
 					// scrollbar: false,
 					yes: function (index, layero) {
 						for (i in batch_layer_add_upload) {
-							delete batch_layer_add_upload[i]["text"];
+							num = batch_layer_add_upload[i]["num"]
+							batch_layer_add_upload[i] = num
 						}
 						var upload_data = {
-							data: batch_layer_add_upload
+							data: JSON.stringify(batch_layer_add_upload)
 						};
 						if (Object.keys(batch_layer_add_upload).length == 0) {
 							layer.msg("商品不能为空")
@@ -535,7 +536,7 @@ layui.use(['element', 'form', 'layer', 'table', 'laytpl'], function () {
 									}
 								}
 							}
-							xmlhttp.open("POST", "/api/add_pattern/", true);
+							xmlhttp.open("POST", "/api/add_batch/", true);
 							xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 							xmlhttp.send(toURL(upload_data))
 							layer.close(index);
@@ -581,7 +582,7 @@ layui.use(['element', 'form', 'layer', 'table', 'laytpl'], function () {
 		id = $("#batch-layer-add-product").val();
 		num = Number($("#batch-layer-add-count").val());
 
-		if (id == "" || num == 0)
+		if (id == null || id == "" || num == 0)
 			return
 
 		// console.log(id, num)

@@ -1,8 +1,11 @@
 package dbconn
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
+	"strconv"
+	"sync"
 )
 
 // grant flag
@@ -17,6 +20,8 @@ const (
 
 	GRANT_SUPER = (1 << iota) - 1
 )
+
+var tx_mux sync.Mutex
 
 type ItemInfomation struct {
 	Id     string
@@ -173,29 +178,60 @@ func GetUserID(name string) (id string, err error) {
 // func ListItem() (tb Table, err error) {
 // 	return Select("item", nil, nil, []string{"it_id", "it_pd_id", "it_bt_id", "it_status"})
 // }
-func AddItem(num, pd_id, bt_id, status int) (res int64, err error) {
-	var val [4]string
-	val[1] = fmt.Sprintf("%d", pd_id)
-	val[2] = fmt.Sprintf("%d", bt_id)
-	val[3] = fmt.Sprintf("%d", status)
-	for i := int64(0); i < int64(num); {
-		for {
-			val[0] = itemIDStrRander.Get()
-			tb, err := Select("item", []string{"it_id ="}, val[0:1], []string{"it_id"})
-			if err != nil {
-				return i, err
-			}
-			if len(tb.Content) == 0 {
-				break
-			}
-		}
-		_, err := Insert("item", []string{"it_id", "it_pd_id", "it_bt_id", "it_status"}, val[0:4])
-		if err != nil {
-			return i, err
-		}
-		i += 1
+func AddItem(u_id int, item_data map[string]int) (int64, error) {
+	tx_mux.Lock()
+	defer tx_mux.Unlock()
+
+	noerr := false
+	tx, err := BeginTx()
+	if err != nil {
+		return -1, err
 	}
-	return int64(num), nil
+	defer func() {
+		if !noerr {
+			RollbackTx(tx)
+		}
+	}()
+
+	// add batch
+	res, err := TxInsert(tx, "batch", []string{"bt_u_id"}, []string{strconv.Itoa(u_id)})
+	if err != nil {
+		return -1, err
+	}
+
+	for k, v := range item_data {
+		var val [4]string
+		//pdid
+		val[1] = k
+		//ptid
+		val[2] = strconv.Itoa(int(res))
+
+		errcnt := v
+		for i := 0; i < v; i++ {
+			for {
+				val[0] = itemIDStrRander.Get()
+				tb, err := TxSelectEX(tx, "item", []string{"it_id ="}, val[0:1], []string{"it_id"}, "", nil)
+				if err != nil {
+					return -1, err
+				}
+				if len(tb.Content) == 0 {
+					break
+				}
+				errcnt--
+				if errcnt == 0 {
+					return -1, errors.New("cannot add more items")
+				}
+			}
+			_, err := TxInsert(tx, "item", []string{"it_id", "it_pd_id", "it_bt_id"}, val[0:3])
+			if err != nil {
+				return -1, err
+			}
+		}
+	}
+	noerr = true
+	CommitTx(tx)
+	tx = nil
+	return res, nil
 }
 
 // func SetItem(id string, change map[string]string) (res int64, err error) {
@@ -212,6 +248,112 @@ func AddItem(num, pd_id, bt_id, status int) (res int64, err error) {
 // func RemoveItem(id string) (res int64, err error) {
 // 	return Delete("item", []string{"it_id ="}, []string{id})
 // }
+
+// Transaction
+func BeginTx() (tx *sql.Tx, err error) {
+	return db.Begin()
+}
+func RollbackTx(tx *sql.Tx) (err error) {
+	return tx.Rollback()
+}
+func CommitTx(tx *sql.Tx) (err error) {
+	return tx.Commit()
+}
+func TxSelectEX(tx *sql.Tx, tb_name string, search_keys []string, search_values []string, keys []string, extra string, ex_value []string) (ret Table, err error) {
+	// ret.Init(keys...)
+	if len(search_keys) != len(search_values) {
+		return ret, errors.New("请求键值数量不一致")
+	}
+	col_num := len(keys)
+	qstr := "SELECT "
+	for i, s := range keys {
+		if i != 0 {
+			qstr += ", "
+		}
+		qstr += s
+	}
+	qstr += " FROM " + tb_name
+
+	for i, s := range search_keys {
+		if i == 0 {
+			qstr += " WHERE "
+		} else {
+			qstr += " and "
+		}
+		qstr += s + " ?"
+	}
+	if extra != "" {
+		qstr += " " + extra
+	}
+	values_interface := make([]interface{}, len(search_values))
+	for i, v := range search_values {
+		values_interface[i] = v
+	}
+	if ex_value != nil {
+		values_interface = append(values_interface, ex_value)
+	}
+	//fmt.Println(qstr, search_values)
+	rows, err := tx.Query(qstr, values_interface...)
+	if err != nil {
+		return ret, err
+	}
+	defer rows.Close()
+
+	ret.Header, err = rows.Columns()
+	if err != nil {
+		return ret, err
+	}
+
+	for rows.Next() {
+		new_row := make([]string, col_num)
+		pointers := make([]interface{}, col_num)
+		for i := 0; i < col_num; i++ {
+			pointers[i] = &new_row[i]
+		}
+		if err = rows.Scan(pointers...); err != nil {
+			return ret, err // Handle scan error
+		}
+		ret.Content = append(ret.Content, new_row)
+	}
+	// check iteration error
+	if rows.Err() != nil {
+		fmt.Println(err)
+	}
+	return
+}
+func TxInsert(tx *sql.Tx, tb_name string, keys []string, values []string) (res int64, err error) {
+	if len(keys) != len(values) {
+		return 0, errors.New("请求键值数量不一致")
+	}
+	if len(keys) == 0 {
+		return 0, errors.New("无动作")
+	}
+	qstr := "INSERT INTO " + tb_name + " ("
+	for i, s := range keys {
+		if i != 0 {
+			qstr += ", "
+		}
+		qstr += s
+	}
+	qstr += ") VALUES ("
+	for i, _ := range values {
+		if i != 0 {
+			qstr += ", "
+		}
+		qstr += "?"
+	}
+	qstr += ")"
+	values_interface := make([]interface{}, len(values))
+	for i, v := range values {
+		values_interface[i] = v
+	}
+	// fmt.Println(qstr, values)
+	result, err := tx.Exec(qstr, values_interface...)
+	if err != nil {
+		return 0, err
+	}
+	return result.LastInsertId()
+}
 
 // insert delete update selete
 func Insert(tb_name string, keys []string, values []string) (res int64, err error) {

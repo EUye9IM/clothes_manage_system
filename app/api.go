@@ -1,6 +1,7 @@
 package app
 
 import (
+	"encoding/json"
 	"errors"
 	"log"
 	"manage_system/config"
@@ -772,7 +773,7 @@ func routeApi(e *gin.Engine) {
 			msg
 	*/
 	route_group.POST("/add_batch/", func(c *gin.Context) {
-		ok, _, _ := checkgrant(c, dbconn.GRANT_ITEM_ADD)
+		ok, uinfo, _ := checkgrant(c, dbconn.GRANT_ITEM_ADD)
 		if !ok {
 			return
 		}
@@ -782,24 +783,46 @@ func routeApi(e *gin.Engine) {
 		if raw_data == "" {
 			c.JSON(http.StatusOK, gin.H{
 				"res": false,
-				"msg": "品类 id 不能为空",
+				"msg": "data 不能为空",
 			})
 			return
 		}
 
-		// ret, err := dbconn.Insert("product", []string{"pd_pt_id", "pd_SKU", "pd_color", "pd_size"}, []string{ptid, SKU, color, size})
-		// if err != nil {
-		// 	c.JSON(http.StatusOK, gin.H{
-		// 		"res": false,
-		// 		"msg": "错误。" + err.Error(),
-		// 	})
-		// 	return
-		// }
-		// log.Println("user id:" + strconv.Itoa(uinfo.ID) + " add_pattern id:" + strconv.Itoa(int(ret)) + " SKU:" + SKU + " color:" + color + " size:" + size)
-		// c.JSON(http.StatusOK, gin.H{
-		// 	"res": true,
-		// 	"msg": "添加成功。",
-		// })
+		m := make(map[string]int)
+
+		err := json.Unmarshal([]byte(raw_data), &m)
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"res": false,
+				"msg": "data 不是合法json",
+			})
+			return
+		}
+		if len(m) == 0 {
+			c.JSON(http.StatusOK, gin.H{
+				"res": false,
+				"msg": "data 不能为空",
+			})
+			return
+		}
+
+		ret, err := dbconn.AddItem(uinfo.ID, m)
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"res": false,
+				"msg": "错误。" + err.Error(),
+			})
+			return
+		}
+		datastr := ""
+		for k, v := range m {
+			datastr += " " + k + ":" + strconv.Itoa(v)
+		}
+		log.Println("user id:" + strconv.Itoa(uinfo.ID) + " add_pattern id:" + strconv.Itoa(int(ret)) + " data:" + datastr)
+		c.JSON(http.StatusOK, gin.H{
+			"res": true,
+			"msg": "添加成功。",
+		})
 	})
 	/**	select_batch
 	GET
