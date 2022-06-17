@@ -372,7 +372,7 @@ func routeApi(e *gin.Engine) {
 			})
 			return
 		}
-		ret, err := dbconn.Delete("user", []string{"u_id ="}, []string{uid})
+		ret, err := dbconn.Delete("", "user", []string{"u_id ="}, []string{uid})
 		if err != nil {
 			c.JSON(http.StatusOK, gin.H{
 				"res": false,
@@ -534,11 +534,8 @@ func routeApi(e *gin.Engine) {
 			})
 			return
 		}
-		dbconn.Delete("item FORM item i INNER JOIN product pd ON i.it_pd_id = pd.pd_id INNER JOIN pattern pt ON pd.pd_pt_id = pt.pt_id",
+		_, err = dbconn.Delete("item", "item INNER JOIN product ON it_pd_id = pd_id INNER JOIN pattern ON pd_pt_id = pt_id",
 			[]string{"pt_id ="}, []string{id})
-		dbconn.Delete("product FORM product pd INNER JOIN pattern pt ON pd.pd_pt_id = pt.pt_id",
-			[]string{"pt_id ="}, []string{id})
-		ret, err := dbconn.Delete("pattern", []string{"pt_id ="}, []string{id})
 		if err != nil {
 			c.JSON(http.StatusOK, gin.H{
 				"res": false,
@@ -546,10 +543,21 @@ func routeApi(e *gin.Engine) {
 			})
 			return
 		}
-		if ret != 1 {
+		_, err = dbconn.Delete("product", "product INNER JOIN pattern ON pd_pt_id = pt_id",
+			[]string{"pt_id ="}, []string{id})
+		if err != nil {
 			c.JSON(http.StatusOK, gin.H{
 				"res": false,
-				"msg": "错误。请联系管理。【" + srcLoc() + "】",
+				"msg": "错误。请联系管理。【" + srcLoc() + "】" + err.Error(),
+			})
+			return
+		}
+		_, err = dbconn.Delete("", "pattern",
+			[]string{"pt_id ="}, []string{id})
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"res": false,
+				"msg": "错误。请联系管理。【" + srcLoc() + "】" + err.Error(),
 			})
 			return
 		}
@@ -713,9 +721,8 @@ func routeApi(e *gin.Engine) {
 		}
 		ptid := tb.Content[0][0]
 
-		dbconn.Delete("item FORM item i INNER JOIN product pd ON i.it_pd_id = pd.pd_id",
+		_, err = dbconn.Delete("item", "item INNER JOIN product ON it_pd_id = pd.pd_id",
 			[]string{"pt_id ="}, []string{id})
-		ret, err := dbconn.Delete("product", []string{"pd_id ="}, []string{id})
 		if err != nil {
 			c.JSON(http.StatusOK, gin.H{
 				"res":   false,
@@ -725,10 +732,12 @@ func routeApi(e *gin.Engine) {
 			})
 			return
 		}
-		if ret == 0 {
+		_, err = dbconn.Delete("", "product",
+			[]string{"pt_id ="}, []string{id})
+		if err != nil {
 			c.JSON(http.StatusOK, gin.H{
 				"res":   false,
-				"msg":   "错误。款式 " + id + " 不存在.",
+				"msg":   "错误。" + err.Error(),
 				"count": 0,
 				"data":  []gin.H{},
 			})
@@ -897,8 +906,8 @@ func routeApi(e *gin.Engine) {
 			return
 		}
 
-		_, _ = dbconn.Delete("item", []string{"it_bt_id ="}, []string{id})
-		ret, err := dbconn.Delete("batch", []string{"bt_id ="}, []string{id})
+		_, _ = dbconn.Delete("", "item", []string{"it_bt_id ="}, []string{id})
+		ret, err := dbconn.Delete("", "batch", []string{"bt_id ="}, []string{id})
 		if err != nil {
 			c.JSON(http.StatusOK, gin.H{
 				"res": false,

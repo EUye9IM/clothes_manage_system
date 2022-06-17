@@ -38,7 +38,7 @@
 							href="javascript:showContent('#user')">用户管理</a></li>
 					<li class="layui-nav-item"><a href="javascript:showContent('#product')">品类管理</a></li>
 					<li class="layui-nav-item"><a href="javascript:showContent('#batch')">批次管理</a></li>
-					<li class="layui-nav-item"><a href="javascript:showContent('#item')">商品管理</a></li>
+					<li class="layui-nav-item"><a href="javascript:showContent('#item');layui.table.reload('tb-item', {url: '/api/select_item/'})">商品管理</a></li>
 				</ul>
 			</div>
 		</div>

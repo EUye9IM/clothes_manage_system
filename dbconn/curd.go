@@ -392,12 +392,12 @@ func Insert(tb_name string, keys []string, values []string) (res int64, err erro
 	}
 	return result.LastInsertId()
 }
-func Delete(tb_name string, search_keys []string, search_values []string) (res int64, err error) {
+func Delete(tb_name_before_from string, tb_name string, search_keys []string, search_values []string) (res int64, err error) {
 	if len(search_keys) != len(search_values) {
 		return 0, errors.New("请求键值数量不一致")
 	}
 
-	qstr := "DELETE FROM " + tb_name
+	qstr := "DELETE " + tb_name_before_from + " FROM " + tb_name
 
 	for i, s := range search_keys {
 		if i == 0 {
