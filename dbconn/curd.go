@@ -272,7 +272,10 @@ func TxSelectEX(tx *sql.Tx, tb_name string, search_keys []string, search_values 
 		}
 		qstr += s
 	}
-	qstr += " FROM " + tb_name
+
+	if tb_name != "" {
+		qstr += " FROM " + tb_name
+	}
 
 	for i, s := range search_keys {
 		if i == 0 {
@@ -289,8 +292,8 @@ func TxSelectEX(tx *sql.Tx, tb_name string, search_keys []string, search_values 
 	for i, v := range search_values {
 		values_interface[i] = v
 	}
-	if ex_value != nil {
-		values_interface = append(values_interface, ex_value)
+	for _, v := range ex_value {
+		values_interface = append(values_interface, v)
 	}
 	//fmt.Println(qstr, search_values)
 	rows, err := tx.Query(qstr, values_interface...)
@@ -466,7 +469,9 @@ func Select(tb_name string, search_keys []string, search_values []string, keys [
 		}
 		qstr += s
 	}
-	qstr += " FROM " + tb_name
+	if tb_name != "" {
+		qstr += " FROM " + tb_name
+	}
 
 	for i, s := range search_keys {
 		if i == 0 {
@@ -522,7 +527,10 @@ func SelectEX(tb_name string, search_keys []string, search_values []string, keys
 		}
 		qstr += s
 	}
-	qstr += " FROM " + tb_name
+
+	if tb_name != "" {
+		qstr += " FROM " + tb_name
+	}
 
 	for i, s := range search_keys {
 		if i == 0 {
@@ -539,8 +547,8 @@ func SelectEX(tb_name string, search_keys []string, search_values []string, keys
 	for i, v := range search_values {
 		values_interface[i] = v
 	}
-	if ex_value != nil {
-		values_interface = append(values_interface, ex_value)
+	for _, v := range ex_value {
+		values_interface = append(values_interface, v)
 	}
 	//fmt.Println(qstr, search_values)
 	rows, err := db.Query(qstr, values_interface...)

@@ -462,9 +462,9 @@ layui.use(['element', 'form', 'layer', 'table', 'laytpl'], function () {
 		cols: [[
 			{ field: 'id', title: 'ID', width: '10%', sort: true },
 			{ field: 'uid', title: '管理员ID', width: '10%', sort: true },
-			{ field: 'time', title: '时间', width: '45%', sort: true },
+			{ field: 'time', title: '时间', width: '30%', sort: true },
 			{ field: 'count', title: '数量', width: '15%', sort: true },
-			//	{ field: 'option', title: '', width: '15%', toolbar: '#batch-tool' },
+			{ field: 'option', title: '', width: '30%', toolbar: '#batch-tool' },
 		]],
 		toolbar: '#batch-toolbar',
 		done: (res, curr, count) => { init(); },
@@ -546,6 +546,68 @@ layui.use(['element', 'form', 'layer', 'table', 'laytpl'], function () {
 				break;
 		};
 	});
+	table.render({
+		elem: '#tb-batch-info',
+		height: 'full-300',
+		url: '/api/info_batch',
+		cols: [[
+			{ field: 'pd_id', title: 'ID', width: '100', sort: true },
+			{ field: 'pt_brand', title: '品牌', width: '100' },
+			{ field: 'pt_name', title: '品名', width: '300' },
+			{ field: 'pd_color', title: '颜色', width: '300' },
+			{ field: 'pd_size', title: '尺码', width: '300' },
+			{ field: 'count', title: '数量', width: '150', sort: true },
+			// { field: 'option', title: '', width: '30%', toolbar: '#batch-tool' },
+		]],
+		done: (res, curr, count) => { init(); },
+		//	page: true,
+	})
+	table.on('tool(tb-batch)', function (obj) {
+		switch (obj.event) {
+			case 'info':
+				table.reload("tb-batch-info", {
+					url: '/api/info_batch/',
+					where: {
+						"id": obj.data.id,
+					},
+				}, true);
+				layer.open({
+					type: 1,
+					content: $("#batch-layer-info"),
+					title: '批次详情',
+					// resize: false,
+					// scrollbar: false,
+				});
+				break;
+			case 'delete':
+				layer.confirm('确定删除批次“' + obj.data.id + '”?', {
+					btn: ['确定', '取消'] //按钮
+				}, function () {
+					var upload_data = {
+						"id": obj.data.id,
+					};
+					xmlhttp.onreadystatechange = function () {
+						if (xmlhttp.readyState == 4) {
+							if (xmlhttp.status == 200) {
+								var res = JSON.parse(xmlhttp.response)
+								layer.msg(res.msg);
+								if (res.res) {
+									table.reload('tb-batch', {
+										url: '/api/select_batch/',
+									}, true)
+								}
+							} else {
+								layer.msg("服务器连接失败：" + xmlhttp.status)
+							}
+						}
+					}
+					xmlhttp.open("POST", "/api/del_batch/", true);
+					xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+					xmlhttp.send(toURL(upload_data))
+				});
+				break;
+		};
+	});
 	form.on('select(batch-layer-add-pattern)', function (data) {
 		if (data.value == "") {
 			$('#batch-layer-add-product').html("");
@@ -596,6 +658,24 @@ layui.use(['element', 'form', 'layer', 'table', 'laytpl'], function () {
 		updateBatchUpload();
 	})
 
+	// item
+	table.render({
+		elem: '#tb-item',
+		height: 'full-300',
+		url: '/api/select_item',
+		cols: [[
+			{ field: 'bt_id', title: '批次号', width: '10%' },
+			{ field: 'pt_name', title: '品名', width: '10%' },
+			{ field: 'pt_brand', title: '品牌', width: '10%' },
+			{ field: 'pd_SKU', title: 'SKU', width: '10%' },
+			{ field: 'pd_color', title: '颜色', width: '10%' },
+			{ field: 'pd_size', title: '规格', width: '10%' },
+			{ field: 'pt_price', title: '价格', width: '10%' },
+			{ field: 'it_id', title: '识别号', width: '10%' },
+		]],
+		// toolbar: '#user-toolbar',
+			page: true,
+	})
 });
 
 
@@ -620,6 +700,41 @@ function showContent(select) {
 	if (select != "")
 		$(select).removeClass("layui-hide");
 }
+
+function showBatch(id) {
+	var upload_data = {
+		"id": id,
+	};
+	xmlhttp.onreadystatechange = function () {
+		if (xmlhttp.readyState == 4) {
+			if (xmlhttp.status == 200) {
+				var res = JSON.parse(xmlhttp.response)
+				// var tpl = $('#pattern-layer-show-productTpl').html();
+				// layui.use('laytpl', function () {
+				// 	var laytpl = layui.laytpl;
+				// 	laytpl(tpl).render(res, function (html) {
+				// 		$("#pattern-layer-show-product").html(html);
+				// 		layui.table.init('tb-product', {
+				// 			done: (res, curr, count) => { init(); }
+				// 		});
+				// 		layui.layer.open({
+				// 			type: 1,
+				// 			title: '款式列表',
+				// 			content: $("#pattern-layer-show-product"),
+				// 			resize: false,
+				// 		});
+				// 	});
+				// })
+
+			} else {
+				layer.msg("服务器连接失败：" + xmlhttp.status)
+			}
+		}
+	}
+	// xmlhttp.open("GET", "/api/select_product/?" + toURL(upload_data), true);
+	xmlhttp.send()
+}
+
 
 function showProduct(id) {
 	var upload_data = {

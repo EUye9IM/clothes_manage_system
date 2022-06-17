@@ -13,6 +13,8 @@ import (
 	"github.com/gorilla/sessions"
 )
 
+const MAX_LIMIT = 100
+
 func tbToJson(tb *dbconn.Table) (data []gin.H, err error) {
 	data = nil
 	if tb == nil {
@@ -869,6 +871,195 @@ func routeApi(e *gin.Engine) {
 			"code":  0,
 			"msg":   "成功。",
 			"count": len(data),
+			"data":  data,
+		})
+	})
+
+	/**	del_batch
+	POST
+		id id
+	RET JSON
+		res
+		msg
+	*/
+	route_group.POST("/del_batch/", func(c *gin.Context) {
+		ok, uinfo, _ := checkgrant(c, dbconn.GRANT_DEL)
+		if !ok {
+			return
+		}
+		var err error
+		id := c.PostForm("id")
+		if id == "" {
+			c.JSON(http.StatusOK, gin.H{
+				"res": false,
+				"msg": "批次 id 不能为空",
+			})
+			return
+		}
+
+		_, _ = dbconn.Delete("item", []string{"it_bt_id ="}, []string{id})
+		ret, err := dbconn.Delete("batch", []string{"bt_id ="}, []string{id})
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"res": false,
+				"msg": "错误。" + err.Error(),
+			})
+			return
+		}
+		if ret == 0 {
+			c.JSON(http.StatusOK, gin.H{
+				"res": false,
+				"msg": "错误。款式 " + id + " 不存在.",
+			})
+			return
+		}
+
+		log.Println("user id:" + strconv.Itoa(uinfo.ID) + " del_batch id:" + id)
+
+		c.JSON(http.StatusOK, gin.H{
+			"res": true,
+			"msg": "删除成功。",
+		})
+	})
+
+	/**	info_batch
+	GET
+		id id
+	RET
+		code int 0 true -1 false
+		msg string
+		count int
+		data LIST JSON
+			pd_id
+			count
+	*/
+	route_group.GET("/info_batch/", func(c *gin.Context) {
+		ok, _, _ := checkgrant(c, -1)
+		if !ok {
+			return
+		}
+		id := c.Query("id")
+		if id == "" {
+			c.JSON(http.StatusOK, gin.H{
+				"res": false,
+				"msg": "批次 id 不能为空",
+			})
+			return
+		}
+		var tb dbconn.Table
+		var err error
+		tb, err = dbconn.SelectEX("item JOIN product ON pd_id = it_pd_id JOIN pattern on pt_id = pd_pt_id", []string{"it_bt_id ="}, []string{id},
+			[]string{"pd_id", "pt_brand", "pt_name", "pd_color", "pd_size", "count(*) as count"}, " GROUP BY it_pd_id", nil)
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"code":  -1,
+				"msg":   "错误。请联系管理。【" + srcLoc() + "】" + err.Error(),
+				"count": 0,
+				"data":  []gin.H{},
+			})
+			return
+		}
+
+		data, err := tbToJson(&tb)
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"code":  -1,
+				"msg":   "错误。请联系管理。【" + srcLoc() + "】",
+				"count": 0,
+				"data":  []gin.H{},
+			})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"code":  0,
+			"msg":   "成功。",
+			"count": len(data),
+			"data":  data,
+		})
+	})
+
+	/**	select_item
+	GET
+		page
+		limit
+	RET
+		code int 0 true -1 false
+		msg string
+		count int
+		data LIST JSON
+			id
+			uid
+			time
+			count
+	*/
+	route_group.GET("/select_item/", func(c *gin.Context) {
+		var err error
+		ok, _, _ := checkgrant(c, -1)
+		if !ok {
+			return
+		}
+		page, _ := strconv.Atoi(c.Query("page"))
+		limit, err := strconv.Atoi(c.Query("limit"))
+
+		if err != nil || limit > MAX_LIMIT || page <= 0 {
+			c.JSON(http.StatusOK, gin.H{
+				"code":  -1,
+				"msg":   "参数 不合法",
+				"count": 0,
+				"data":  []gin.H{},
+			})
+			return
+		}
+		tx, err := dbconn.BeginTx()
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"code":  -1,
+				"msg":   "错误。请联系管理。【" + srcLoc() + "】" + err.Error(),
+				"count": 0,
+				"data":  []gin.H{},
+			})
+			return
+		}
+		defer dbconn.RollbackTx(tx)
+
+		var tb dbconn.Table
+		tb, err = dbconn.TxSelectEX(tx, "item JOIN product ON it_pd_id = pd_id JOIN pattern ON pt_id = pd_pt_id JOIN batch ON bt_id = it_bt_id", nil, nil,
+			[]string{"sql_calc_found_rows bt_id", "it_id", "pt_name", "pt_brand", "pt_price", "pd_size", "pd_SKU", "pd_color"}, "ORDER BY it_id LIMIT ?, ?",
+			[]string{strconv.Itoa((page - 1) * limit), strconv.Itoa(limit)})
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"code":  -1,
+				"msg":   "错误。请联系管理。【" + srcLoc() + "】" + err.Error(),
+				"count": 0,
+				"data":  []gin.H{},
+			})
+			return
+		}
+
+		data, err := tbToJson(&tb)
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"code":  -1,
+				"msg":   "错误。请联系管理。【" + srcLoc() + "】",
+				"count": 0,
+				"data":  []gin.H{},
+			})
+			return
+		}
+		tb, err = dbconn.TxSelectEX(tx, "", nil, nil, []string{"FOUND_ROWS()"}, "", nil)
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"code":  -1,
+				"msg":   "错误。请联系管理。【" + srcLoc() + "】" + err.Error(),
+				"count": 0,
+				"data":  []gin.H{},
+			})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"code":  0,
+			"msg":   "成功。",
+			"count": tb.Content[0][0],
 			"data":  data,
 		})
 	})
