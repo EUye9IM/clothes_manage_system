@@ -1,13 +1,13 @@
--- MySQL dump 10.19  Distrib 10.3.28-MariaDB, for Linux (x86_64)
+-- MySQL dump 10.13  Distrib 5.5.62, for Win64 (AMD64)
 --
--- Host: localhost    Database: manage_system
+-- Host: 192.168.80.200    Database: manage_system
 -- ------------------------------------------------------
--- Server version	10.3.28-MariaDB
+-- Server version	5.5.5-10.3.28-MariaDB
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
+/*!40101 SET NAMES utf8 */;
 /*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
 /*!40103 SET TIME_ZONE='+00:00' */;
 /*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
@@ -29,17 +29,8 @@ CREATE TABLE `batch` (
   PRIMARY KEY (`bt_id`),
   KEY `batch` (`bt_u_id`),
   CONSTRAINT `batch_ibfk_1` FOREIGN KEY (`bt_u_id`) REFERENCES `user` (`u_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `batch`
---
-
-LOCK TABLES `batch` WRITE;
-/*!40000 ALTER TABLE `batch` DISABLE KEYS */;
-/*!40000 ALTER TABLE `batch` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `item`
@@ -52,7 +43,6 @@ CREATE TABLE `item` (
   `it_id` char(24) NOT NULL,
   `it_pd_id` int(11) NOT NULL,
   `it_bt_id` int(11) NOT NULL,
-  -- `it_status` int(11) NOT NULL DEFAULT 0,
   PRIMARY KEY (`it_id`),
   KEY `it_pd_id` (`it_pd_id`),
   KEY `it_bt_id` (`it_bt_id`),
@@ -60,15 +50,6 @@ CREATE TABLE `item` (
   CONSTRAINT `item_ibfk_2` FOREIGN KEY (`it_bt_id`) REFERENCES `batch` (`bt_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `item`
---
-
-LOCK TABLES `item` WRITE;
-/*!40000 ALTER TABLE `item` DISABLE KEYS */;
-/*!40000 ALTER TABLE `item` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `pattern`
@@ -83,17 +64,8 @@ CREATE TABLE `pattern` (
   `pt_brand` char(32) DEFAULT NULL,
   `pt_price` decimal(6,2) NOT NULL DEFAULT 0.00,
   PRIMARY KEY (`pt_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `pattern`
---
-
-LOCK TABLES `pattern` WRITE;
-/*!40000 ALTER TABLE `pattern` DISABLE KEYS */;
-/*!40000 ALTER TABLE `pattern` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `product`
@@ -105,23 +77,14 @@ DROP TABLE IF EXISTS `product`;
 CREATE TABLE `product` (
   `pd_id` int(11) NOT NULL AUTO_INCREMENT,
   `pd_pt_id` int(11) NOT NULL,
-  `pd_SKU` char(14),
-  `pd_color` char(32),
-  `pd_size` char(32),
+  `pd_SKU` char(14) DEFAULT NULL,
+  `pd_color` char(32) DEFAULT NULL,
+  `pd_size` char(32) DEFAULT NULL,
   PRIMARY KEY (`pd_id`),
   KEY `pd_pt_id` (`pd_pt_id`),
   CONSTRAINT `product_ibfk_1` FOREIGN KEY (`pd_pt_id`) REFERENCES `pattern` (`pt_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `product`
---
-
-LOCK TABLES `product` WRITE;
-/*!40000 ALTER TABLE `product` DISABLE KEYS */;
-/*!40000 ALTER TABLE `product` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `user`
@@ -138,17 +101,12 @@ CREATE TABLE `user` (
   `u_grant` int(11) NOT NULL DEFAULT 0,
   PRIMARY KEY (`u_id`),
   UNIQUE KEY `u_name` (`u_name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `user`
+-- Dumping routines for database 'manage_system'
 --
-
-LOCK TABLES `user` WRITE;
-/*!40000 ALTER TABLE `user` DISABLE KEYS */;
-/*!40000 ALTER TABLE `user` ENABLE KEYS */;
-UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -159,4 +117,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2022-04-23  7:59:05
+-- Dump completed on 2022-06-19  0:21:51

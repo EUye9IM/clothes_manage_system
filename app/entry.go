@@ -22,7 +22,7 @@ func Run() {
 	}
 	defer dbconn.Close()
 
-	// gin.SetMode(gin.ReleaseMode)
+	gin.SetMode(gin.ReleaseMode)
 	engine = gin.Default()
 	engine.SetTrustedProxies(nil)
 

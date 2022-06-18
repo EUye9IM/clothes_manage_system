@@ -991,6 +991,9 @@ func routeApi(e *gin.Engine) {
 	GET
 		page
 		limit
+		id
+		SKU
+		batch
 	RET
 		code int 0 true -1 false
 		msg string
@@ -1009,6 +1012,9 @@ func routeApi(e *gin.Engine) {
 		}
 		page, _ := strconv.Atoi(c.Query("page"))
 		limit, err := strconv.Atoi(c.Query("limit"))
+		id := c.Query("id")
+		SKU := c.Query("SKU")
+		batch := c.Query("batch")
 
 		if err != nil || limit > MAX_LIMIT || page <= 0 {
 			c.JSON(http.StatusOK, gin.H{
@@ -1031,8 +1037,25 @@ func routeApi(e *gin.Engine) {
 		}
 		defer dbconn.RollbackTx(tx)
 
+		sk := make([]string, 0, 3)
+		sv := make([]string, 0, 3)
+
+		if batch != "" {
+			sk = append(sk, "bt_id =")
+			sv = append(sv, batch)
+		}
+		if id != "" {
+			sk = append(sk, "it_id like")
+			sv = append(sv, "%"+id+"%")
+		}
+		if SKU != "" {
+			sk = append(sk, "pd_SKU =")
+			sv = append(sv, SKU)
+		}
+
 		var tb dbconn.Table
-		tb, err = dbconn.TxSelectEX(tx, "item JOIN product ON it_pd_id = pd_id JOIN pattern ON pt_id = pd_pt_id JOIN batch ON bt_id = it_bt_id", nil, nil,
+		tb, err = dbconn.TxSelectEX(tx, "item JOIN product ON it_pd_id = pd_id JOIN pattern ON pt_id = pd_pt_id JOIN batch ON bt_id = it_bt_id",
+			sk, sv,
 			[]string{"sql_calc_found_rows bt_id", "it_id", "pt_name", "pt_brand", "pt_price", "pd_size", "pd_SKU", "pd_color"}, "ORDER BY it_id LIMIT ?, ?",
 			[]string{strconv.Itoa((page - 1) * limit), strconv.Itoa(limit)})
 		if err != nil {

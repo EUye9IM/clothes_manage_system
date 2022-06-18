@@ -410,6 +410,7 @@ layui.use(['element', 'form', 'layer', 'table', 'laytpl'], function () {
 									if (xmlhttp.status == 200) {
 										var res = JSON.parse(xmlhttp.response)
 										layer.msg(res.msg);
+
 									} else {
 										layer.msg("服务器连接失败：" + xmlhttp.status)
 									}
@@ -527,10 +528,11 @@ layui.use(['element', 'form', 'layer', 'table', 'laytpl'], function () {
 										layer.msg(res.msg);
 										if (res.res) {
 											$('#pattern-search').val("")
-											table.reload('tb-pattern', {
-												url: '/api/select_pattern/',
-											}, true)
 										}
+										table.reload('tb-batch', {
+											url: '/api/select_batch/',
+										}, true)
+
 									} else {
 										layer.msg("服务器连接失败：" + xmlhttp.status)
 									}
@@ -671,13 +673,26 @@ layui.use(['element', 'form', 'layer', 'table', 'laytpl'], function () {
 			{ field: 'pd_color', title: '颜色', width: '10%' },
 			{ field: 'pd_size', title: '规格', width: '10%' },
 			{ field: 'pt_price', title: '价格', width: '10%' },
-			{ field: 'it_id', title: '识别号', width: '10%' },
+			{ field: 'it_id', title: '识别号', width: '25%' },
 		]],
-		// toolbar: '#user-toolbar',
-			page: true,
+		toolbar: '#item-toolbar',
+		page: true,
 	})
+	$("#item-search-batch").on("input", reloadItemTB)
 });
-
+function reloadItemTB() {
+	batch = $("#item-search-batch").val()
+	SKU = $("#item-search-SKU").val()
+	id = $("#item-search-id").val()
+	layui.table.reload('tb-item', {
+		url: '/api/select_item/',
+		where: {
+			"id": id,
+			"SKU": SKU,
+			"batch": batch,
+		},
+	}, true)
+}
 
 function updateBatchUpload() {
 	html = ""

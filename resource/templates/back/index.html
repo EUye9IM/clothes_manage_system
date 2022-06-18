@@ -38,7 +38,9 @@
 							href="javascript:showContent('#user')">用户管理</a></li>
 					<li class="layui-nav-item"><a href="javascript:showContent('#product')">品类管理</a></li>
 					<li class="layui-nav-item"><a href="javascript:showContent('#batch')">批次管理</a></li>
-					<li class="layui-nav-item"><a href="javascript:showContent('#item');layui.table.reload('tb-item', {url: '/api/select_item/'})">商品管理</a></li>
+					<li class="layui-nav-item"><a
+							href="javascript:showContent('#item');reloadItemTB();">商品管理</a>
+					</li>
 				</ul>
 			</div>
 		</div>
@@ -95,6 +97,11 @@
 					<fieldset class="layui-elem-field">
 						<legend>商品管理</legend>
 						<div class="layui-field-box">
+									<form class="layui-form">
+										<input type="text" id="item-search-batch" oninput="reloadItemTB()" class="layui-input" placeholder="批次id">
+										<input type="text" id="item-search-SKU" oninput="reloadItemTB()" class="layui-input" placeholder="SKU">
+										<input type="text" id="item-search-id" oninput="reloadItemTB()" class="layui-input" placeholder="ID 模糊查询">
+									</form>
 							<table id="tb-item" lay-filter="tb-item"></table>
 						</div>
 					</fieldset>
@@ -286,9 +293,11 @@
 		<button class="layui-btn layui-btn-xs" lay-event="info">详情</button>
 		<button class="layui-btn layui-btn-xs WITH_GRANT_DEL layui-hide" lay-event="delete">删除批次</button>
 	</script>
-	<div id="batch-layer-info" style="display: none;" >
-		<div style="margin:0 20px;"><table id="tb-batch-info" lay-filter="tb-batch-info"></table></div>
-		
+	<div id="batch-layer-info" style="display: none;">
+		<div style="margin:0 20px;">
+			<table id="tb-batch-info" lay-filter="tb-batch-info"></table>
+		</div>
+
 	</div>
 	<!-- <script id="batch-layer-infoTpl" type="text/html">
 			<table id="tb-product" lay-filter="tb-product">
@@ -352,6 +361,10 @@
 			</table>
 		</div>
 	</div>
+	<!--item-->
+	<script type="text/html" id="item-toolbar">
+
+	</script>
 
 	<script>
 		//init

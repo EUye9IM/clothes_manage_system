@@ -51,7 +51,7 @@ func init() {
 
 func GetItemInfomation(id string) (info ItemInfomation, err error) {
 	tb_name := "item INNER JOIN product ON it_pd_id = pd_id INNER JOIN pattern ON pd_pt_id = pt_id"
-	tb, err := Select(tb_name, []string{"it_id ="}, []string{id}, []string{"it_id", "pt_name", "pt_brand", "pd_color", "pd_size", "pt_price", "it_status"})
+	tb, err := Select(tb_name, []string{"it_id ="}, []string{id}, []string{"it_id", "pt_name", "pt_brand", "pd_color", "pd_size", "pt_price"})
 	if err != nil {
 		return
 	}
@@ -65,7 +65,6 @@ func GetItemInfomation(id string) (info ItemInfomation, err error) {
 	info.Color = tb.Content[0][3]
 	info.Size = tb.Content[0][4]
 	fmt.Sscan(tb.Content[0][5], &info.Price)
-	fmt.Sscan(tb.Content[0][6], &info.Status)
 	return
 }
 
