@@ -721,8 +721,7 @@ func routeApi(e *gin.Engine) {
 		}
 		ptid := tb.Content[0][0]
 
-		_, err = dbconn.Delete("item", "item INNER JOIN product ON it_pd_id = pd.pd_id",
-			[]string{"pt_id ="}, []string{id})
+		_, err = dbconn.Delete("", "item", []string{"it_pd_id ="}, []string{id})
 		if err != nil {
 			c.JSON(http.StatusOK, gin.H{
 				"res":   false,
@@ -732,8 +731,7 @@ func routeApi(e *gin.Engine) {
 			})
 			return
 		}
-		_, err = dbconn.Delete("", "product",
-			[]string{"pt_id ="}, []string{id})
+		_, err = dbconn.Delete("", "product", []string{"pd_id ="}, []string{id})
 		if err != nil {
 			c.JSON(http.StatusOK, gin.H{
 				"res":   false,
@@ -743,7 +741,7 @@ func routeApi(e *gin.Engine) {
 			})
 			return
 		}
-		log.Println("user id:" + strconv.Itoa(uinfo.ID) + " del_pattern id:" + id)
+		log.Println("user id:" + strconv.Itoa(uinfo.ID) + " del_product id:" + id)
 
 		tb, err = dbconn.Select("product", []string{"pd_pt_id ="}, []string{ptid},
 			[]string{"pd_id as id", "pd_SKU as SKU", "pd_color as color", "pd_size as size"})

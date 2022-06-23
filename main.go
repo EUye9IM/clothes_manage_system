@@ -6,6 +6,6 @@ import (
 )
 
 func main() {
-	fmt.Println("http://localhost:80/backend")
+	fmt.Println("http://localhost/")
 	app.Run()
 }
